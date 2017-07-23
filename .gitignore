@@ -1,0 +1,8 @@
+distribution
+data
+lib
+web
+resources
+.DS_Store
+.project
+.classpath
