@@ -20,7 +20,7 @@ xtra_ examples requires [Geomerative](https://github.com/rikrd/geomerative), [Op
 
 ### Installing
 
-Unzip and put the extracted XYscope folder into the libraries folder of your Processing sketches. Reference and examples are included in the XYscope folder.
+Install the [latest release](/releases/latest) and extract the XYscope folder into your ~/Documents/Processing/libraries/ directory (Windows installation varies). Reference and examples are included in the XYscope folder.
 
 ## Authors
 
