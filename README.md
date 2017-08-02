@@ -32,6 +32,6 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Acknowledgments
 
-* Thanks to [Just Van Rossum](https://www.instagram.com/justvanrossum/) for the enlightening conversation on my X-Y attempts.
+* Thanks to [Just Van Rossum](http://dailydrawbot.tumblr.com) for the enlightening conversation on my X-Y attempts.
 * Thanks to [Stefanie Bräuer](https://mewi.unibas.ch/seminar/personen/profil/portrait/person/stefaniebraeuer/) for feeding the oscilloscope obsession
 
