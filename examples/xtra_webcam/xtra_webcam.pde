@@ -1,6 +1,6 @@
 /* 
- xtra_type
- Let's draw type on the scope! 
+ xtra_webcam
+ You via your webcam on the scope! 
  mouseX - threshold
  mouseY - threshold distance
  
@@ -8,6 +8,10 @@
  
  cc teddavis.org 2017
  */
+
+//PREFS
+int threshold = 65;
+float thresholdDist = 115;
 
 // import and create instance of XYscope
 import xyscope.*;
@@ -30,8 +34,6 @@ import java.awt.*;
 OpenCV opencv;
 ArrayList<Contour> contours;
 int cutoff = 91;
-int threshold = 65;
-float thresholdDist = 115;
 PImage p;
 
 void setup() {
@@ -61,7 +63,7 @@ void draw() {
     thresholdDist = map(mouseY, 0, height, 0, 255-threshold);
 
     // replace variable defaults at top if you find better ones
-    println(threshold +" / "+ thresholdDist);
+    println("threshold: "+threshold +" / thresholdDist: "+ thresholdDist);
   }
 
   // convert video to high contrast threshold
