@@ -10,8 +10,8 @@
  */
 
 //PREFS
-int threshold = 160;
-float thresholdDist = 77;
+int threshold = 138;
+float thresholdDist = 43;
 int cutoff = 91; // limit min size contour
 
 // import and create instance of XYscope
@@ -81,9 +81,9 @@ void draw() {
     // convert syphon to high contrast threshold
     for (int i=0; i<imgf.width*imgf.height; i++) {
       if (brightness(imgf.pixels[i]) > threshold && brightness(imgf.pixels[i]) < threshold+thresholdDist) {
-        imgf.pixels[i]  = color(0); // White
+        imgf.pixels[i]  = color(200); // White
       } else {
-        imgf.pixels[i]  = color(255); // Black
+        imgf.pixels[i]  = color(0); // Black
       }
     }
 
@@ -103,29 +103,29 @@ void draw() {
         image(otemp, 0, 0);
       }
     }
-  }
-  contours = opencv.findContours(true, false);
 
-  // sort group of lines for effeciant drawing
-  Collections.sort(contours, new MyComparator());
+    contours = opencv.findContours(true, false);
 
-  // draw shapes on scope
-  for (Contour contour : contours) {
-    if (contours.size() > 0) {
-      contour.setPolygonApproximationFactor(1);
-      if (contour.numPoints() > cutoff) {        
-        xy.beginShape();
-        for (PVector point : contour.getPolygonApproximation().getPoints()) {
-          xy.vertex(point.x, point.y);
+    // sort group of lines for effeciant drawing
+    Collections.sort(contours, new MyComparator());
+
+    // draw shapes on scope
+    for (Contour contour : contours) {
+      if (contours.size() > 0) {
+        contour.setPolygonApproximationFactor(1);
+        if (contour.numPoints() > cutoff) {        
+          xy.beginShape();
+          for (PVector point : contour.getPolygonApproximation().getPoints()) {
+            xy.vertex(point.x, point.y);
+          }
+          xy.endShape();
         }
-        xy.endShape();
       }
     }
+
+    // build audio from shapes
+    xy.buildWaves();
   }
-
-  // build audio from shapes
-  xy.buildWaves();
-
   // draw XY analytics
   xy.drawXY();
 }
