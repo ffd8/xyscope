@@ -8,7 +8,8 @@ This includes most primitive shapes (point, line, rect, ellipse, vertex, ...) by
 
 Install as suggested below or 
 
-*PENDING* add within Processing from Sketch -> Import Library... -> Add Library...
+Add within Processing from Contribution Manager: 
+Sketch -> Import Library... -> Add Library...
 
 More details + reference at [teddavis.org/xyscope](http://www.teddavis.org/xyscope)
 
@@ -16,7 +17,8 @@ More details + reference at [teddavis.org/xyscope](http://www.teddavis.org/xysco
 
 This library relies on and is greatly thankful for [Minim](https://github.com/ddf/Minim)
 
-xtra_ examples requires [Geomerative](https://github.com/rikrd/geomerative), [OpenCV for Processing](https://github.com/atduskgreg/opencv-processing), [openkinect](https://github.com/shiffman/OpenKinect-for-Processing), [video](https://github.com/processing/processing-video)
+xtra_ examples requires [Geomerative](https://github.com/rikrd/geomerative), [OpenCV for Processing](https://github.com/atduskgreg/opencv-processing), [openkinect](https://github.com/shiffman/OpenKinect-for-Processing), [video](https://github.com/processing/processing-video), [syphon](https://github.com/Syphon/Processing)
+
 
 ### Installing
 
@@ -34,4 +36,4 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 * Thanks to [Just Van Rossum](http://dailydrawbot.tumblr.com) for the enlightening conversation on my X-Y attempts.
 * Thanks to [Stefanie Bräuer](https://mewi.unibas.ch/seminar/personen/profil/portrait/person/stefaniebraeuer/) for feeding the oscilloscope obsession
-
+* [Processing Library Template](https://github.com/processing/processing-library-template)
