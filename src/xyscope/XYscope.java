@@ -90,6 +90,20 @@ public class XYscope {
 		initMinim();
 		setMixer();
 	}
+	
+	/**
+	 * Initialize library in setup(), use default system audio out setting.
+	 * 
+	 * @param	theParent	PApplet to apply to, typically 'this'
+	 * @param	outMix	AudioOutput to merge instance and of XYscope to
+	 */
+	//	 * @example basic_shapes
+	
+	public XYscope(PApplet theParent, AudioOutput outMix) {
+		myParent = theParent;
+		initMinim();
+		setWaveTable(outMix);
+	}
 
 	/**
 	 * Initialize library in setup(), custom soundcard by String for XY.
@@ -119,7 +133,6 @@ public class XYscope {
 		initMinim();
 		setMixer(xyMixer);
 	}
-
 
 	/**
 	 * Initialize library in setup(), custom soundcard by String for XY, custom soundcard by String for Z.
@@ -250,6 +263,29 @@ public class XYscope {
 		waveY  = new Oscil(freq.y, amp.y, tableY); 
 		tableY.setWaveform(shapeY); 
 		waveY.patch(panY).patch(outXY);
+
+		waveX.reset();
+		waveY.reset();
+
+		if(zaxis){
+			tableZ = Waves.randomNHarms(0); 
+			waveZ  = new Oscil(freq.z, amp.z, tableZ); 
+			tableZ.setWaveform(shapeZ); 
+			waveZ.patch(outZ); // need pan?? or gets full amp to both channels?
+			waveZ.reset();
+		}
+	}
+	
+	private void setWaveTable(AudioOutput outMix){
+		tableX = Waves.randomNHarms(0); 
+		waveX  = new Oscil(freq.x, amp.x, tableX); 
+		tableX.setWaveform(shapeX); 
+		waveX.patch(panX).patch(outMix); 
+
+		tableY = Waves.randomNHarms(0); 
+		waveY  = new Oscil(freq.y, amp.y, tableY); 
+		tableY.setWaveform(shapeY); 
+		waveY.patch(panY).patch(outMix);
 
 		waveX.reset();
 		waveY.reset();
