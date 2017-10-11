@@ -55,6 +55,10 @@ public class XYscope {
 	float initFreq = 50f; // 43.065
 	PVector freq = new PVector(initFreq,initFreq,initFreq);
 	float audioWaveAmp = 512f;
+	
+	// Mixing audio channels
+	AudioOutput mixXY;
+	boolean useMix = false;
 
 	int waveSize = 1024;
 	float[] shapeY = new float[waveSize]; 
@@ -103,6 +107,7 @@ public class XYscope {
 		myParent = theParent;
 		initMinim();
 		setWaveTable(outMix);
+		useMix = true;
 	}
 
 	/**
@@ -286,7 +291,9 @@ public class XYscope {
 		waveY  = new Oscil(freq.y, amp.y, tableY); 
 		tableY.setWaveform(shapeY); 
 		waveY.patch(panY).patch(outMix);
-
+		
+		mixXY = outMix;
+		
 		waveX.reset();
 		waveY.reset();
 
@@ -783,9 +790,16 @@ public class XYscope {
 		myParent.pushMatrix();
 		myParent.translate(myParent.width/2, myParent.height/2);
 		myParent.beginShape();
-		for (int i = 0; i < outXY.bufferSize()-1; i++) {
-			float lAudio = outXY.left.get(i)*audioWaveAmp;
-			float rAudio = outXY.right.get(i)*audioWaveAmp;
+		AudioOutput tempXY;
+		if(useMix){
+			tempXY = mixXY;
+		}else{
+			tempXY = outXY;
+		}
+		
+		for (int i = 0; i < tempXY.bufferSize()-1; i++) {
+			float lAudio = tempXY.left.get(i)*audioWaveAmp;
+			float rAudio = tempXY.right.get(i)*audioWaveAmp;
 			myParent.curveVertex(lAudio, rAudio*-1f);
 		}
 		myParent.endShape();
@@ -843,18 +857,26 @@ public class XYscope {
 		myParent.noFill();
 		myParent.pushMatrix();
 		myParent.beginShape();
-		for (int i = 0; i < outXY.bufferSize()-1; i++) {
-			float xAudio = myParent.map(i, 0, outXY.bufferSize(), 0, myParent.width);
-			float lAudio = outXY.left.get(i);
+		
+		AudioOutput tempXY;
+		if(useMix){
+			tempXY = mixXY;
+		}else{
+			tempXY = outXY;
+		}
+		
+		for (int i = 0; i < tempXY.bufferSize()-1; i++) {
+			float xAudio = myParent.map(i, 0, tempXY.bufferSize(), 0, myParent.width);
+			float lAudio = tempXY.left.get(i);
 			//curveVertex(lAudio, rAudio*-1);
 			myParent.vertex(xAudio, myParent.height*.25f - (myParent.height*.25f) * lAudio);
 		}
 		myParent.endShape();
 
 		myParent.beginShape();
-		for (int i = 0; i < outXY.bufferSize()-1; i++) {
-			float xAudio = myParent.map(i, 0, outXY.bufferSize(), 0, myParent.width);
-			float rAudio = outXY.right.get(i);
+		for (int i = 0; i < tempXY.bufferSize()-1; i++) {
+			float xAudio = myParent.map(i, 0, tempXY.bufferSize(), 0, myParent.width);
+			float rAudio = tempXY.right.get(i);
 			//curveVertex(lAudio, rAudio*-1);
 			myParent.vertex(xAudio, myParent.height*.75f + (myParent.height*.25f) * rAudio);
 		}
