@@ -60,13 +60,13 @@ public class XYscope {
 	AudioOutput mixXY;
 	boolean useMix = false;
 
-	int waveSize = 1024;
-	float[] shapeY = new float[waveSize]; 
-	float[] shapeX = new float[waveSize]; 
-	float[] shapeZ = new float[waveSize]; 
-	float[] shapePreY = new float[waveSize];
-	float[] shapePreX = new float[waveSize];
-	float[] shapePreZ = new float[waveSize];
+	int waveSizeVal = 1024;
+	float[] shapeY = new float[waveSizeVal]; 
+	float[] shapeX = new float[waveSizeVal]; 
+	float[] shapeZ = new float[waveSizeVal]; 
+	float[] shapePreY = new float[waveSizeVal];
+	float[] shapePreX = new float[waveSizeVal];
+	float[] shapePreZ = new float[waveSizeVal];
 
 	int ellipseDetail = 30;
 
@@ -544,7 +544,7 @@ public class XYscope {
 	 * @param newSize	int 
 	 */
 	public int waveSize(){
-		return waveSize;
+		return waveSizeVal;
 	}
 	
 	/**
@@ -552,13 +552,18 @@ public class XYscope {
 	 * @param newSize	int 
 	 */
 	public void waveSize(int newSize){
-		waveSize = newSize;
-		shapeY = new float[waveSize]; 
-		shapeX = new float[waveSize]; 
-		shapeZ = new float[waveSize]; 
-		shapePreY = new float[waveSize];
-		shapePreX = new float[waveSize];
-		shapePreZ = new float[waveSize];
+		waveSizeVal = newSize;
+		shapeY = new float[waveSizeVal]; 
+		shapeX = new float[waveSizeVal]; 
+		shapeZ = new float[waveSizeVal]; 
+		shapePreY = new float[waveSizeVal];
+		shapePreX = new float[waveSizeVal];
+		shapePreZ = new float[waveSizeVal];
+		tableX.setWaveform(shapeX); 
+		tableY.setWaveform(shapeY); 
+		if(zaxis){
+			tableZ.setWaveform(shapeZ); 
+		}
 	}
 
 	/**
