@@ -52,6 +52,8 @@
 	<property name="project.reference" location="reference"/>
 	<property name="project.dist" location="distribution"/>
 	<property name="project.dist.version" location="distribution/${project.name}-${library.version}"/>
+	<property name="project.changesource" location="changelog.txt"/>
+	<property name="project.changedest" location="${project.dist.version}/changelog.txt"/>
 	<property name="install.source" location="resources/README.md"/>
 	<property name="install.destination" location="${project.dist.version}/README.md"/>
 	<property name="libprops.source" location="resources/library.properties"/>
@@ -111,6 +113,7 @@ ${line}
 		<antcall target="copyToSketchbook"><param name="folder" value="libraries"/></antcall>
 		<antcall target="generate.distribution" />
 		<antcall target="generate.install.library" />
+		<antcall target="generate.project.changelog" />
 		<antcall target="generate.web" />
 	  	<antcall target="generate.zip" />	
 	  	<delete dir="${project.tmp}"/>
@@ -175,7 +178,6 @@ ${line}
   			<fileset dir="${project.lib}" excludes="README" />
 	  	</copy>
 	</target>
-	
 	
 	<target name="generate.source" if="is.normal">
 		<antcall target="generate.source.win"/>
@@ -278,6 +280,7 @@ ${line}
         <replaceregexp file="${file}" match="##library.categories##" replace="${library.categories}" flags="g" />
         <replaceregexp file="${file}" match="##library.sentence##" replace="${library.sentence}" flags="g" />
     	<replaceregexp file="${file}" match="##library.paragraph##" replace="${library.paragraph}" flags="g" />
+    	<replaceregexp file="${file}" match="##library.acknowledgements##" replace="${library.acknowledgements}" flags="g" />
     	<replaceregexp file="${file}" match="##library.keywords##" replace="${library.keywords}" flags="g" />
         <replaceregexp file="${file}" match="##library.dependencies##" replace="${library.dependencies}" flags="g" />
     	
@@ -296,6 +299,15 @@ ${line}
 		
 		<antcall target="parse.file"><param name="file" value="${install.destination}"/></antcall>
 	</target>	
+	
+	<target name="generate.project.changelog" if="is.normal">	
+		<copy file="${project.changesource}" tofile="${project.changedest}" />
+		
+		<antcall target="parse.file"><param name="file" value="${project.changedest}"/></antcall>
+	</target>	
+	
+		
+
 	
 	
 	

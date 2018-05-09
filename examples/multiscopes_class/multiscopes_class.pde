@@ -17,7 +17,7 @@ import ddf.minim.*;
 int scopeCount = 4;
 
 // replace with your own aggregate device names
-//String[] mixerName = {"MOTU828_A_12", "MOTU828_A_34", "MOTU828_A_56", "MOTU828_A_78"};
+//String[] mixerName = {"MK3_12", "MK3_34", "MK3_56", "MK3_78"};
 String[] mixerName = {"", "", "", ""};
 
 // custom class below

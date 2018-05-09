@@ -45,10 +45,12 @@ void draw() {
 
   // clear waves like refreshing background
   xy.clearWaves();
-  
+
   // change shape with mouse
-  pts = floor(map(mouseX, 0, width, 1, 50));
-  segments = floor(map(mouseY, 0, height, 1, 50));
+  if (mousePressed) {
+    pts = floor(map(mouseX, 0, width, 1, 50));
+    segments = floor(map(mouseY, 0, height, 1, 50));
+  }
 
   //center and spin toroid
   pushMatrix();

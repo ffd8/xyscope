@@ -16,12 +16,6 @@ void setup() {
 
   // initialize XYscope with default sound out
   xy = new XYscope(this);
-
-  // smooth waves to reduce visible points
-  xy.smoothWaves(true);
-  
-  // test best smoothAmount, default 12
-  xy.smoothWavesAmount(12);
 }
 
 
@@ -38,9 +32,6 @@ void draw() {
 void mouseDragged() {
   // add point based on width/height
   xy.point(mouseX, mouseY);
-
-  // add point normalized to 0 – 1
-  //xy.addPoint(norm(mouseX, 0, width), norm(mouseY, 0, height));
 }
 
 void keyPressed() {

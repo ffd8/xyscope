@@ -2,7 +2,7 @@
 
 XYScope is a library for Processing to render graphics on a vector display (oscilloscope, laser) by converting them to audio.
 
-This includes most primitive shapes (point, line, rect, ellipse, vertex, ...) by converting those points to waveforms (oscillators with custom wavetables) and generating audio in real time using the Minim library. Vector graphics shine on a vector display and now you can view your generative works like never before! Only tested on MacOS 10.9.5+, but should work on Windows.
+This includes most primitive shapes (point, line, rect, ellipse, vertex, ...) by converting those points to waveforms (oscillators with custom wavetables) and generating audio in real time using the Minim library. Vector graphics shine on a vector display and now you can view your generative works like never before! Tested on MacOS 10.9+, Windows, Linux (RPi!).
 
 ## Getting Started
 
@@ -34,6 +34,6 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Acknowledgments
 
-* Thanks to [Just Van Rossum](http://dailydrawbot.tumblr.com) for the enlightening conversation on my X-Y attempts.
-* Thanks to [Stefanie Bräuer](https://mewi.unibas.ch/seminar/personen/profil/portrait/person/stefaniebraeuer/) for feeding the oscilloscope obsession
+* [Just Van Rossum](http://dailydrawbot.tumblr.com) for the enlightening conversation on my X-Y attempts.
+* [Stefanie Bräuer](https://medienwissenschaft.philhist.unibas.ch/de/personen/stefanie-braeuer/) for feeding the obsession with crucial theory + context.
 * [Processing Library Template](https://github.com/processing/processing-library-template)

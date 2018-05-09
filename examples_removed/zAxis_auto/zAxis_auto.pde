@@ -2,6 +2,7 @@
  zAxis_auto
  Draw isolated forms by using a 2nd audio out for Z-axis modulation.
  When 2nd audio card is specified, z-axis mode is enabled.
+ Note: temporarily broken.. new better rendering mode, needs better z-axis
  cc teddavis.org 2017
  */
 

@@ -118,6 +118,7 @@ void draw() {
   }
 
   // build audio from shapes
+  if(contours.size() > 0)
   xy.buildWaves();
 
   // draw Path + XY analytics
