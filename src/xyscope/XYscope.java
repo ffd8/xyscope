@@ -88,6 +88,15 @@ public class XYscope {
 	float zaxisMax = 1f;
 	float zaxisMin = -1f;
 	int zoffset = 1;
+	
+	boolean useVectrex = false;
+	float vectrexAmp = .82f;
+	float vectrexAmpInit = .6f;
+	int vectrexRotation = 0;
+	int vectrexWidth = 310;
+	int vectrexHeight = 410;
+	
+	int xyWidth, xyHeight;
 
 	/**
 	 * Initialize library in setup(), use default system audio out setting.
@@ -113,6 +122,7 @@ public class XYscope {
 	 */
 	public XYscope(PApplet theParent, AudioOutput outMix) {
 		myParent = theParent;
+		welcome();
 		initMinim();
 		setWaveTable(outMix);
 		useMix = true;
@@ -171,7 +181,9 @@ public class XYscope {
 	}
 
 	private void welcome() {
-		System.out.println("XYscope 2.0.0 by Ted Davis http://teddavis.org");
+		System.out.println("XYscope 2.1.0 by Ted Davis http://teddavis.org");
+		xyWidth = myParent.width;
+		xyHeight = myParent.height;
 	}
 
 	/**
@@ -374,6 +386,38 @@ public class XYscope {
 		zaxisMin = zMin;
 		zaxisMax = zMax;
 	}
+	
+	public void vectrex(){
+		vectrex(vectrexWidth, vectrexHeight, vectrexAmpInit);
+	}
+	
+	public void vectrex(int vrot){
+		if(vrot == 90){
+			vectrexRotation = vrot;
+			vectrex(vectrexHeight, vectrexWidth, vectrexAmpInit);
+		}else if(vrot == -90){
+			vectrexRotation = vrot;
+			vectrex(vectrexHeight, vectrexWidth, vectrexAmpInit);
+		}else{
+			vectrexRotation = vrot;
+			vectrex(vectrexWidth, vectrexHeight, vectrexAmpInit);
+		}
+	}
+	
+	public void vectrex(int vw, int vh, float vamp){
+		useVectrex = true;
+		myParent.getSurface().setResizable(true);
+		myParent.getSurface().setSize(vw, vh);
+		xyWidth = vw;
+		xyHeight = vh;
+		amp(vamp);
+	}
+	
+//	public void vectrexRotation(int vrot){
+//		myParent.translate(xyWidth / 2, xyHeight / 2);
+//		myParent.rotate(radians(vrot));
+//		myParent.translate(-xyWidth / 2, -xyHeight / 2);
+//	}
 
 	/**
 	 * Get current amplitude setting of XY oscillators.
@@ -393,6 +437,10 @@ public class XYscope {
 	public void amp(float newAmp) {
 		amp.x = constrain(newAmp, 0f, 1f);
 		amp.y = constrain(newAmp, 0f, 1f);
+		if(useVectrex){
+			amp.x *= vectrexAmp;
+		}
+		
 		waveX.setAmplitude(amp.x);
 		waveY.setAmplitude(amp.y);
 		if (zaxis) {
@@ -411,6 +459,8 @@ public class XYscope {
 	 */
 	public void amp(float newAmpX, float newAmpY) {
 		amp.x = constrain(newAmpX, 0f, 1f);
+		if(useVectrex)
+			amp.x *= vectrexAmp;
 		amp.y = constrain(newAmpY, 0f, 1f);
 		waveX.setAmplitude(amp.x);
 		waveY.setAmplitude(amp.y);
@@ -426,6 +476,8 @@ public class XYscope {
 	 */
 	public void amp(float newAmpX, float newAmpY, float newAmpZ) {
 		amp.x = constrain(newAmpX, 0f, 1f);
+		if(useVectrex)
+			amp.x *= vectrexAmp;
 		amp.y = constrain(newAmpY, 0f, 1f);
 		waveX.setAmplitude(amp.x);
 		waveY.setAmplitude(amp.y);
@@ -444,6 +496,8 @@ public class XYscope {
 	 */
 	public void amp(PVector newAmp) {
 		float tempX = constrain(newAmp.x, 0f, 1f);
+		if(useVectrex)
+			tempX *= vectrexAmp;
 		float tempY = constrain(newAmp.y, 0f, 1f);
 		waveX.setAmplitude(tempX);
 		waveY.setAmplitude(tempY);
@@ -700,6 +754,18 @@ public class XYscope {
 			for (int i = 0; i < shapePreX.length; i++) {
 				shapeX[i] = shapePreX[i];
 				shapeY[i] = shapePreY[i];
+				if(useVectrex){
+					if(vectrexRotation == 90){
+						shapeX[i] = shapePreY[i];
+						shapeY[i] = shapePreX[i]*-1;
+					}else if(vectrexRotation == -90){
+						shapeX[i] = shapePreY[i]*-1;
+						shapeY[i] = shapePreX[i];
+					}else{
+						shapeX[i] = shapePreX[i]*-1;
+						shapeY[i] = shapePreY[i]*-1;
+					}
+				}
 				if (zaxis && useZ)
 					shapeZ[i] = shapePreZ[i];
 			}
@@ -891,8 +957,8 @@ public class XYscope {
 		myParent.beginShape();
 		for (XYShape shape : shapes) {
 			for (int i = 0; i < shape.size(); i++) {
-				float x = map(shape.get(i).x, 0f, 1f, 0f, myParent.width);
-				float y = map(shape.get(i).y, 0f, 1f, 0f, myParent.height);
+				float x = map(shape.get(i).x, 0f, 1f, 0f, xyWidth);
+				float y = map(shape.get(i).y, 0f, 1f, 0f, xyHeight);
 				myParent.vertex(x, y);
 			}
 		}
@@ -912,8 +978,8 @@ public class XYscope {
 		myParent.pushMatrix();
 		for (XYShape shape : shapes) {
 			for (int i = 0; i < shape.size(); i++) {
-				float x = map(shape.get(i).x, 0f, 1f, 0f, myParent.width);
-				float y = map(shape.get(i).y, 0f, 1f, 0f, myParent.height);
+				float x = map(shape.get(i).x, 0f, 1f, 0f, xyWidth);
+				float y = map(shape.get(i).y, 0f, 1f, 0f, xyHeight);
 				myParent.ellipse(x, y, 3, 3);
 			}
 		}
@@ -930,7 +996,7 @@ public class XYscope {
 		myParent.noFill();
 		myParent.stroke(50, 255, 50);
 		myParent.pushMatrix();
-		myParent.translate(myParent.width / 2, myParent.height / 2);
+		myParent.translate(xyWidth / 2, xyHeight / 2);
 		myParent.beginShape();
 		AudioOutput tempXY;
 		if (useMix) {
@@ -940,17 +1006,23 @@ public class XYscope {
 		}
 
 		for (int i = 0; i < tempXY.bufferSize() - 1; i++) {
-			float lAudio = tempXY.left.get(i) * (float) myParent.width / 2;
-			float rAudio = tempXY.right.get(i) * (float) myParent.height / 2;
+			float lAudio = tempXY.left.get(i) * (float) xyWidth / 2;
+			float rAudio = tempXY.right.get(i) * (float) xyHeight / 2;
+			if(useVectrex){
+				if(vectrexRotation == 90){
+					rAudio = tempXY.left.get(i) * (float) xyWidth / 2;
+					lAudio = tempXY.right.get(i) * (float) xyHeight / 2 * -1f;
+				}
+			}
 			myParent.curveVertex(lAudio, rAudio * -1f);
 		}
 
 		myParent.endShape();
 
 		if (debugWave) {
-			float mouseT = (myParent.mouseX / (float) myParent.width);
-			float mx = tableX.value(mouseT) * (float) myParent.width / 2 * amp.x;
-			float my = -tableY.value(mouseT) * (float) myParent.height / 2 * amp.y;
+			float mouseT = (myParent.mouseX / (float) xyWidth);
+			float mx = tableX.value(mouseT) * (float) xyWidth / 2 * amp.x;
+			float my = -tableY.value(mouseT) * (float) xyHeight / 2 * amp.y;
 			myParent.pushStyle();
 			myParent.fill(50, 255, 50);
 			myParent.noStroke();
@@ -977,28 +1049,28 @@ public class XYscope {
 
 		// X -> L
 		myParent.stroke(50, 50, 255);
-		for (int i = 0; i < myParent.width; i++) {
-			myParent.vertex(i, (float) myParent.height * .25f
-					- ((float) myParent.height * .125f) * tableX.value((float) i / (float) myParent.width));
+		for (int i = 0; i < xyWidth; i++) {
+			myParent.vertex(i, (float) xyHeight * .25f
+					- ((float) xyHeight * .125f) * tableX.value((float) i / (float) xyWidth));
 		}
 		myParent.endShape();
 
 		// Y -> R
 		myParent.stroke(255, 50, 50);
 		myParent.beginShape();
-		for (int i = 0; i < myParent.width; i++) {
-			myParent.vertex(i, (float) myParent.height * .75f
-					- ((float) myParent.height * 0.125f) * tableY.value((float) i / (float) myParent.width));
+		for (int i = 0; i < xyWidth; i++) {
+			myParent.vertex(i, (float) xyHeight * .75f
+					- ((float) xyHeight * 0.125f) * tableY.value((float) i / (float) xyWidth));
 		}
 		myParent.endShape();
 
 		if (debugWave) {
-			float mouseT = (myParent.mouseX / (float) myParent.width);
+			float mouseT = (myParent.mouseX / (float) xyWidth);
 			float lx = myParent.mouseX;
-			float ly = (float) myParent.height * .25f - ((float) myParent.height * .125f)
-					* tableX.value((float) myParent.mouseX / (float) myParent.width);
-			float ry = (float) myParent.height * .75f - ((float) myParent.height * .125f)
-					* tableY.value((float) myParent.mouseX / (float) myParent.width);
+			float ly = (float) xyHeight * .25f - ((float) xyHeight * .125f)
+					* tableX.value((float) myParent.mouseX / (float) xyWidth);
+			float ry = (float) xyHeight * .75f - ((float) xyHeight * .125f)
+					* tableY.value((float) myParent.mouseX / (float) xyWidth);
 			myParent.pushStyle();
 			myParent.noStroke();
 			myParent.fill(50, 50, 255);
@@ -1013,8 +1085,8 @@ public class XYscope {
 			myParent.stroke(50, 255, 50);
 			myParent.beginShape();
 			for (int i = 0; i < shapeZ.length; i++) {
-				float xpos = map(i, 0f, (float) shapeZ.length, 0f, (float) myParent.width);
-				myParent.vertex(xpos, (float) myParent.height * .5f - ((float) myParent.height * 0.125f) * shapeZ[i]);// tableZ.value(i));
+				float xpos = map(i, 0f, (float) shapeZ.length, 0f, (float) xyWidth);
+				myParent.vertex(xpos, (float) xyHeight * .5f - ((float) xyHeight * 0.125f) * shapeZ[i]);// tableZ.value(i));
 			}
 			myParent.endShape();
 		}
@@ -1040,29 +1112,29 @@ public class XYscope {
 		}
 
 		for (int i = 0; i < tempXY.bufferSize() - 1; i++) {
-			float xAudio = map(i, 0, tempXY.bufferSize(), 0, myParent.width);
+			float xAudio = map(i, 0, tempXY.bufferSize(), 0, xyWidth);
 			float lAudio = tempXY.left.get(i);
 			// curveVertex(lAudio, rAudio*-1);
-			myParent.vertex(xAudio, myParent.height * .25f - (myParent.height * .25f) * lAudio);
+			myParent.vertex(xAudio, xyHeight * .25f - (xyHeight * .25f) * lAudio);
 		}
 		myParent.endShape();
 
 		myParent.beginShape();
 		for (int i = 0; i < tempXY.bufferSize() - 1; i++) {
-			float xAudio = map(i, 0, tempXY.bufferSize(), 0, myParent.width);
+			float xAudio = map(i, 0, tempXY.bufferSize(), 0, xyWidth);
 			float rAudio = tempXY.right.get(i);
 			// curveVertex(lAudio, rAudio*-1);
-			myParent.vertex(xAudio, myParent.height * .75f + (myParent.height * .25f) * rAudio);
+			myParent.vertex(xAudio, xyHeight * .75f + (xyHeight * .25f) * rAudio);
 		}
 		myParent.endShape();
 
 		if (zaxis) {
 			myParent.beginShape();
 			for (int i = 0; i < outZ.bufferSize() - 1; i++) {
-				float xAudio = map(i, 0, outZ.bufferSize(), 0, myParent.width);
+				float xAudio = map(i, 0, outZ.bufferSize(), 0, xyWidth);
 				float rAudio = outZ.right.get(i);
 				// curveVertex(lAudio, rAudio*-1);
-				myParent.vertex(xAudio, myParent.height * .5f - (myParent.height * .25f) * rAudio);
+				myParent.vertex(xAudio, xyHeight * .5f - (xyHeight * .25f) * rAudio);
 			}
 			myParent.endShape();
 
@@ -1255,8 +1327,8 @@ public class XYscope {
 	 *      Reference -> vertex()</a>
 	 */
 	public void vertex(float x, float y) {
-		float x1out = norm(myParent.screenX(x, y), 0f, myParent.width + 0f);
-		float y1out = norm(myParent.screenY(x, y), 0f, myParent.height + 0f);
+		float x1out = norm(myParent.screenX(x, y), 0f, xyWidth + 0f);
+		float y1out = norm(myParent.screenY(x, y), 0f, xyHeight + 0f);
 		vertex(new PVector(x1out, y1out));
 	}
 
@@ -1267,9 +1339,9 @@ public class XYscope {
 	 *      Reference -> vertex()</a>
 	 */
 	public void vertex(float x, float y, float z) {
-		float x1out = norm(myParent.screenX(x, y, z), 0f, myParent.width + 0f);
-		float y1out = norm(myParent.screenY(x, y, z), 0f, myParent.height + 0f);
-		float z1out = norm(myParent.screenY(x, y, z), 0f, myParent.height + 0f);
+		float x1out = norm(myParent.screenX(x, y, z), 0f, xyWidth + 0f);
+		float y1out = norm(myParent.screenY(x, y, z), 0f, xyHeight + 0f);
+		float z1out = norm(myParent.screenY(x, y, z), 0f, xyHeight + 0f);
 		vertex(new PVector(x1out, y1out, z1out));
 	}
 
