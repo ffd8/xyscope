@@ -4,6 +4,15 @@
 
 
 ////////////////////////////////////////////////////////////
+XYScope 2.1.0 (REV 3) - 25.07.2018
+
++ Vectrex compatibility (custom aspect ratio and +/- 90° rotation)
++ Vectrex example
+
+* BuildWaves + drawXY to work with Vectrex mode
+
+
+////////////////////////////////////////////////////////////
 XYScope 2.0.0 (REV 2) - 08.05.2018
 
 Added/dropped/refactored enough features to need 2.0

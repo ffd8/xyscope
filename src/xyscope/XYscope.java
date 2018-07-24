@@ -387,37 +387,78 @@ public class XYscope {
 		zaxisMax = zMax;
 	}
 	
+	/**
+	 * Use XYscope on a modded Vectrex monitor for XYZ input. This will automatically adjust the canvas and amplitude settings to match the ratio of the Vectrex.
+	 * 
+	 */
 	public void vectrex(){
-		vectrex(vectrexWidth, vectrexHeight, vectrexAmpInit);
+		vectrex(vectrexWidth, vectrexHeight, vectrexAmpInit, vectrexRotation);
 	}
 	
+	/**
+	 * Use XYscope on a modded Vectrex monitor for XYZ input. This will automatically adjust the canvas and amplitude settings to match the ratio of the Vectrex. You can customize the rotation of the monitor +/- 90° if landscape oriented.
+	 * 
+	 * @param vrot
+	 *            int for degrees of rotation, 90 or -90
+	 */
 	public void vectrex(int vrot){
 		if(vrot == 90){
 			vectrexRotation = vrot;
-			vectrex(vectrexHeight, vectrexWidth, vectrexAmpInit);
+			vectrex(vectrexHeight, vectrexWidth, vectrexAmpInit, vectrexRotation);
 		}else if(vrot == -90){
 			vectrexRotation = vrot;
-			vectrex(vectrexHeight, vectrexWidth, vectrexAmpInit);
-		}else{
-			vectrexRotation = vrot;
-			vectrex(vectrexWidth, vectrexHeight, vectrexAmpInit);
+			vectrex(vectrexHeight, vectrexWidth, vectrexAmpInit, vectrexRotation);
+		}else {
+			vectrexRotation = 0;
+			vectrex(vectrexWidth, vectrexHeight, vectrexAmpInit, vectrexRotation);
 		}
 	}
 	
-	public void vectrex(int vw, int vh, float vamp){
+	/**
+	 * Use XYscope on a modded Vectrex monitor for XYZ input. Set custom width, height, initial amplitude scaling and rotation/orientation. 
+	 * 
+	 * @param vw
+	 *            int for width of canvas, default is 330
+	 * @param vh
+	 *            int for height of canvas, default is 410
+	 * @param vrot
+	 *            float for initial amplitude adjustment of signal to screen (0.0 - 1.0), default is .6
+	 * @param vrot
+	 *            int for degrees of rotation, 90 or -90, default is 0
+	 */
+	public void vectrex(int vw, int vh, float vamp, int vrot){
 		useVectrex = true;
+		vectrexRotation = vrot;
 		myParent.getSurface().setResizable(true);
 		myParent.getSurface().setSize(vw, vh);
 		xyWidth = vw;
 		xyHeight = vh;
-		amp(vamp);
+		vectrexAmpInit = vamp;
+		amp(vectrexAmpInit);
 	}
 	
-//	public void vectrexRotation(int vrot){
-//		myParent.translate(xyWidth / 2, xyHeight / 2);
-//		myParent.rotate(radians(vrot));
-//		myParent.translate(-xyWidth / 2, -xyHeight / 2);
-//	}
+	
+	/**
+	 * Get current amplitude difference used for ratio of Vectrex.
+	 * 
+	 * @return float
+	 */
+	public float vectrexRatio(){
+		return vectrexAmp;
+	}
+	
+	
+	/**
+	 * Set current amplitude difference used for ratio of Vectrex.
+	 * 
+	 * @param vectrexAmpVal
+	 *            float for amplitude difference (0.0 - 1.0), default is .82
+	 */
+	public void vectrexRatio(float vectrexAmpVal){
+		vectrexAmp = constrain(vectrexAmpVal, 0f, 1f);
+		amp(vectrexAmpInit);
+	}
+	
 
 	/**
 	 * Get current amplitude setting of XY oscillators.
@@ -754,6 +795,7 @@ public class XYscope {
 			for (int i = 0; i < shapePreX.length; i++) {
 				shapeX[i] = shapePreX[i];
 				shapeY[i] = shapePreY[i];
+				
 				if(useVectrex){
 					if(vectrexRotation == 90){
 						shapeX[i] = shapePreY[i];
@@ -761,11 +803,12 @@ public class XYscope {
 					}else if(vectrexRotation == -90){
 						shapeX[i] = shapePreY[i]*-1;
 						shapeY[i] = shapePreX[i];
-					}else{
+					}else if(vectrexRotation == 0){
 						shapeX[i] = shapePreX[i]*-1;
 						shapeY[i] = shapePreY[i]*-1;
 					}
 				}
+				
 				if (zaxis && useZ)
 					shapeZ[i] = shapePreZ[i];
 			}
@@ -1008,12 +1051,20 @@ public class XYscope {
 		for (int i = 0; i < tempXY.bufferSize() - 1; i++) {
 			float lAudio = tempXY.left.get(i) * (float) xyWidth / 2;
 			float rAudio = tempXY.right.get(i) * (float) xyHeight / 2;
+			
 			if(useVectrex){
 				if(vectrexRotation == 90){
-					rAudio = tempXY.left.get(i) * (float) xyWidth / 2;
-					lAudio = tempXY.right.get(i) * (float) xyHeight / 2 * -1f;
+					rAudio = tempXY.left.get(i) * (float) xyHeight / 2;
+					lAudio = tempXY.right.get(i) * (float) xyWidth / 2 * -1f * vectrexAmp;
+				}else if(vectrexRotation == -90){
+					rAudio = tempXY.left.get(i) * (float) xyHeight / 2 * -1f;
+					lAudio = tempXY.right.get(i) * (float) xyWidth / 2 * vectrexAmp;
+				}else if(vectrexRotation == 0){
+					lAudio = tempXY.left.get(i) * (float) xyWidth / 2 * -1f;
+					rAudio = tempXY.right.get(i) * (float) xyHeight / 2 * -1f * vectrexAmp;
 				}
 			}
+			
 			myParent.curveVertex(lAudio, rAudio * -1f);
 		}
 
