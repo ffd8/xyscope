@@ -43,6 +43,6 @@ void draw() {
   // or specific ones
   // xy.drawPath();
   // xy.drawWaveform();
-  // xy.drawWaves();
+  // xy.drawWave();
   // xy.drawXY();
 }
