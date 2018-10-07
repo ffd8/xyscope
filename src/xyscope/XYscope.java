@@ -50,7 +50,7 @@ public class XYscope {
 	 */
 	public Oscil waveX, waveY, waveZ;
 
-	Wavetable tableX, tableY, tableZ;
+	XYWavetable tableX, tableY, tableZ;
 	Pan panX = new Pan(-1);
 	Pan panY = new Pan(1);
 
@@ -242,12 +242,12 @@ public class XYscope {
 		sumXY = new Summer();
 		sumXY.setChannelCount(2);
 
-		tableX = Waves.randomNHarms(0);
+		tableX = new XYWavetable(2);
 		waveX = new Oscil(freq.x, amp.x, tableX);
 		tableX.setWaveform(shapeX);
 		waveX.patch(panX).patch(sumXY);
 
-		tableY = Waves.randomNHarms(0);
+		tableY = new XYWavetable(2);
 		waveY = new Oscil(freq.y, amp.y, tableY);
 		tableY.setWaveform(shapeY);
 		waveY.patch(panY).patch(sumXY);
@@ -258,12 +258,12 @@ public class XYscope {
 	}
 
 	private void setWaveTable(AudioOutput outMix) {
-		tableX = Waves.randomNHarms(0);
+		tableX = new XYWavetable(2);
 		waveX = new Oscil(freq.x, amp.x, tableX);
 		tableX.setWaveform(shapeX);
 		waveX.patch(panX).patch(outMix);
 
-		tableY = Waves.randomNHarms(0);
+		tableY = new XYWavetable(2);
 		waveY = new Oscil(freq.y, amp.y, tableY);
 		tableY.setWaveform(shapeY);
 		waveY.patch(panY).patch(outMix);
@@ -275,7 +275,7 @@ public class XYscope {
 
 	private void setWaveTableZ() {
 		if (zaxis) {
-			tableZ = Waves.randomNHarms(0);
+			tableZ = new XYWavetable(2);
 			waveZ = new Oscil(freq.z, amp.z, tableZ);
 			tableZ.setWaveform(shapeZ);
 			waveZ.patch(outZ); // need pan?? or gets full amp to both channels?
@@ -941,21 +941,15 @@ public class XYscope {
 							}
 						}
 						
-						try{
 						tx.setWaveform(tfx);
 						ty.setWaveform(tfy);
 						mfx = concat(mfx, tx.getWaveform());
 						mfy = concat(mfy, ty.getWaveform());
-						}catch(Exception e){
-							println(e);
-						}
+						
 					}
-					try{
 					tableX.setWaveform(mfx);
 					tableY.setWaveform(mfy);
-					}catch(Exception e){
-						println(e);
-					}
+					
 				//}else{
 					/*
 					waveSize(waveSizeValOG);
@@ -1586,7 +1580,7 @@ public class XYscope {
 	public void vertex(float x, float y) {
 		float x1out = norm(myParent.screenX(x, y), 0f, xyWidth + 0f);
 		float y1out = norm(myParent.screenY(x, y), 0f, xyHeight + 0f);
-		vertex(new PVector(x1out, y1out));
+		vertexAdd(new PVector(x1out, y1out));
 	}
 
 	/**
@@ -1599,7 +1593,7 @@ public class XYscope {
 		float x1out = norm(myParent.screenX(x, y, z), 0f, xyWidth + 0f);
 		float y1out = norm(myParent.screenY(x, y, z), 0f, xyHeight + 0f);
 		float z1out = norm(myParent.screenY(x, y, z), 0f, xyHeight + 0f);
-		vertex(new PVector(x1out, y1out, z1out));
+		vertexAdd(new PVector(x1out, y1out, z1out));
 	}
 
 	/**
@@ -1610,6 +1604,10 @@ public class XYscope {
 	 */
 
 	public void vertex(PVector p) {
+		vertex(p.x, p.y, p.z);
+	}
+	
+	private void vertexAdd(PVector p) {
 		currentShape.add(p);
 	}
 
@@ -1622,7 +1620,8 @@ public class XYscope {
 
 	public void endShape() {
 		// not necessary in current setup. maybe useful later for z-axis
-		currentShape.get(currentShape.size()-1).z = 1f;
+		if(currentShape.size() > 1)
+			currentShape.get(currentShape.size()-1).z = 1f;
 	}
 
 	private XYShape currentShape = null;
