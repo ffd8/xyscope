@@ -746,7 +746,55 @@ public class XYscope {
 	 * @see points()
 	 */
 	public void buildWaves(int bwm) {
-		if (bwm == 0) {
+		if(bwm == 0){ // waveform gen v3 sep 2018
+			if (shapes.size() > 0) {
+				XYWavetable mx = new XYWavetable(2);
+				XYWavetable my = new XYWavetable(2);
+				float[] mfx = new float[0];
+				float[] mfy = new float[0];
+				for (XYShape shape : shapes) {
+					XYWavetable tx = new XYWavetable(2);
+					XYWavetable ty = new XYWavetable(2);
+					float[] tfx = new float[shape.size()];
+					float[] tfy = new float[shape.size()];
+					
+					for (int i = 0; i < shape.size(); i++) {
+						if(i < tfx.length){
+							PVector tc = shape.get(i);
+							tfx[i] = map(tc.x, 0f, 1f, -1f, 1f);
+							tfy[i] = map(tc.y, 0f, 1f, 1f, -1f);
+							
+							float tfxx = tfx[i];
+							float tfyy = tfy[i];
+							
+							if(useVectrex){
+								if(vectrexRotation == 90){
+									tfx[i] = tfyy;
+									tfy[i] = tfxx*-1;
+								}else if(vectrexRotation == -90){
+									tfx[i] = tfyy*-1;
+									tfy[i] = tfxx;
+								}else if(vectrexRotation == 0){
+									tfx[i] = tfxx*-1;
+									tfy[i] = tfyy*-1;
+								}
+							}
+						}
+					}
+					
+					tx.setWaveform(tfx);
+					ty.setWaveform(tfy);
+					mfx = concat(mfx, tx.getWaveform());
+					mfy = concat(mfy, ty.getWaveform());
+					
+				}
+				tableX.setWaveform(mfx);
+				tableY.setWaveform(mfy);
+			}else{
+				tableX.setWaveform(new float[0]);
+				tableY.setWaveform(new float[0]);
+			}
+		} else if (bwm == -2) { // waveform gen v2 may 2018
 			if (shapes.size() > 0) {
 				if (shapes.totalSize() < waveSizeValOG) {
 					if (waveSize() != shapes.totalSize()) {
@@ -779,196 +827,7 @@ public class XYscope {
 				shapePreX[0] = 0f;
 				shapePreY[0] = 0f;
 			}
-		}else if(bwm == 1){ // NEW + IMPROVED
-			if (shapes.size() > 0) {
-				if(shapes.size() == 1){
-					waveSize(shapes.totalSize());
-					float[] tempWaveX = new float[shapes.totalSize()];
-					float[] tempWaveY = new float[shapes.totalSize()];
-					ArrayList<PVector> ts = shapes.getPoints();
-					for(int i=0; i < tempWaveX.length; i++){
-						tempWaveX[i] = map(ts.get(i).x, 0f, 1f, -1f, 1f);
-						tempWaveY[i] = map(ts.get(i).y, 0f, 1f, 1f, -1f);
-					}
-					tableX.setWaveform(tempWaveX);
-					tableY.setWaveform(tempWaveY);
-				}else if (shapes.totalSize() < waveSizeValOG) { // /shapes.size()
-					float objPoints = shapes.totalSize()-shapes.size()+0f;
-					int objLeftover = waveSizeValOG%(int)objPoints;
-					waveSize(waveSizeValOG + ((int)objPoints-objLeftover));
-					//println(waveSize());
-					float lerpRaw = objPoints/(float)waveSize();
-					float lerpDiv = (float)Math.ceil(lerpRaw*10000f)/10000f;
-					//float lerpDiv = (float)Math.ceil(lerpRaw*10000f)/10000f;
-					//println(lerpDiv);
-					float[] tempWaveX = new float[waveSize()];
-					float[] tempWaveY = new float[waveSize()];
-					float lc = 0f;
-					int curP = 1;
-					ArrayList<PVector> ts = shapes.getPoints();
-					boolean initNext = false;
-					for(int i=0; i < tempWaveX.length; i++){
-						tempWaveX[i] = map(lerp(ts.get(curP-1).x, ts.get(curP).x, lc), 0f, 1f, -1f, 1f);
-						tempWaveY[i] = map(lerp(ts.get(curP-1).y, ts.get(curP).y, lc), 0f, 1f, 1f, -1f);
-						lc += lerpDiv;
-						if(lc >= 1.0){
-							lc = 0f;
-							curP++;
-							if(curP > ts.size()-1){ // check for broken index
-						        break;
-						      }
-							
-							if(initNext){
-								i++;
-								tempWaveX[i] = map(ts.get(curP).x, 0f, 1f, -1f, 1f);
-								tempWaveY[i] = map(ts.get(curP).y, 0f, 1f, 1f, -1f);
-						        curP++;
-						        initNext = false;
-							}else if(ts.get(curP).z == 1.0){
-								initNext = true;
-							}
-						}
-					}
-					tableX.setWaveform(tempWaveX);
-					tableY.setWaveform(tempWaveY);
-				}else {
-					if (waveSize() != waveSizeValOG)
-						waveSize(waveSizeValOG);
-
-					ArrayList<PVector> ts = shapes.getPoints();
-					float[] tempWaveX = new float[waveSizeValOG];
-					float[] tempWaveY = new float[waveSizeValOG];
-
-					for (int i = 0; i < shapeX.length; i++) {
-						int ptsSel = (int) Math.floor(map(i, 0f, shapeX.length, 0, ts.size()));
-						tempWaveX[i] = map(ts.get(ptsSel).x, 0f, 1f, -1f, 1f);
-						tempWaveY[i] = map(ts.get(ptsSel).y, 0f, 1f, 1f, -1f);
-					}
-					tableX.setWaveform(tempWaveX);
-					tableY.setWaveform(tempWaveY);
-				}
-				//println("wavesize: "+waveSize()+" / objs: "+shapes.size()+" / pts: "+shapes.totalSize()+" / wavesize/objs"+waveSizeValOG/shapes.size());
-			} else {
-				//clear waves
-				waveSize(1);
-				float[] tempWaveX = {0f};
-				float[] tempWaveY = {0f};
-				tableX.setWaveform(tempWaveX);
-				tableY.setWaveform(tempWaveY);				
-			}
-		} else if(bwm == 2){
-			if (shapes.size() > 0) {
-				int objPoints = shapes.totalSize()-shapes.size();
-				waveSize(waveSizeValOG);
-				float[] tempWaveX = new float[objPoints*10];
-				float[] tempWaveY = new float[objPoints*10];
-				float lc = 0f;
-				int curP = 0;
-				ArrayList<PVector> ts = shapes.getPoints();
-				for(int i=0; i < tempWaveX.length; i++){
-					tempWaveX[i] = map(lerp(ts.get(curP).x, ts.get(curP+1).x, lc), 0f, 1f, -1f, 1f);
-					tempWaveY[i] = map(lerp(ts.get(curP).y, ts.get(curP+1).y, lc), 0f, 1f, 1f, -1f);
-					lc += .1;
-					if(lc >= 1.0){
-						lc = 0f;
-						curP++;
-						if(ts.get(curP).z == 1.0){
-							i++;
-							tempWaveX[i] = map(lerp(ts.get(curP).x, ts.get(curP+1).x, lc), 0f, 1f, -1f, 1f);
-							tempWaveY[i] = map(lerp(ts.get(curP).y, ts.get(curP+1).y, lc), 0f, 1f, 1f, -1f);
-					        curP++;
-						}
-						if(curP >= ts.size()-1){
-					        break;
-					      }
-					}
-				}
-				
-				float[] mapWaveX = new float[waveSizeValOG];
-				float[] mapWaveY = new float[waveSizeValOG];
-
-				for (int i = 0; i < mapWaveY.length; i++) {
-					int ptsSel = (int) Math.floor(map(i, 0f, mapWaveY.length, 0, tempWaveX.length));
-					mapWaveX[i] = tempWaveX[ptsSel];
-					mapWaveY[i] = tempWaveY[ptsSel];
-				}
-				tableX.setWaveform(mapWaveX);
-				tableY.setWaveform(mapWaveY);
-			}
-		} else if(bwm == 3){
-			// ** check overdraw point?!
-			if (shapes.size() > 0 && !busy) {
-				busy = true;
-				
-				//if(shapes.getPoints().size() < maxPoints){
-					Wavetable mx = Waves.randomNHarms(0);
-					Wavetable my = Waves.randomNHarms(0);
-					float[] mfx = new float[0];
-					float[] mfy = new float[0];
-					for (XYShape shape : shapes) {
-						Wavetable tx = Waves.randomNHarms(0);
-						Wavetable ty = Waves.randomNHarms(0);
-						float[] tfx = new float[shape.size()];
-						float[] tfy = new float[shape.size()];
-						
-						for (int i = 0; i < shape.size(); i++) {
-							if(i < tfx.length){
-								PVector tc = shape.get(i);
-								tfx[i] = map(tc.x, 0f, 1f, -1f, 1f);
-								tfy[i] = map(tc.y, 0f, 1f, 1f, -1f);
-								
-								float tfxx = tfx[i];
-								float tfyy = tfy[i];
-								
-								if(useVectrex){
-									if(vectrexRotation == 90){
-										tfx[i] = tfyy;
-										tfy[i] = tfxx*-1;
-										//shapeX[i] = shapePreY[i];
-										//shapeY[i] = shapePreX[i]*-1;
-									}else if(vectrexRotation == -90){
-										tfx[i] = tfyy*-1;
-										tfy[i] = tfxx;
-										//shapeX[i] = shapePreY[i]*-1;
-										//shapeY[i] = shapePreX[i];
-									}else if(vectrexRotation == 0){
-										tfx[i] = tfxx*-1;
-										tfy[i] = tfyy*-1;
-										//shapeX[i] = shapePreX[i]*-1;
-										//shapeY[i] = shapePreY[i]*-1;
-									}
-								}
-							}
-						}
-						
-						tx.setWaveform(tfx);
-						ty.setWaveform(tfy);
-						mfx = concat(mfx, tx.getWaveform());
-						mfy = concat(mfy, ty.getWaveform());
-						
-					}
-					tableX.setWaveform(mfx);
-					tableY.setWaveform(mfy);
-					
-				//}else{
-					/*
-					waveSize(waveSizeValOG);
-
-					ArrayList<PVector> ts = shapes.getPoints();
-					for (int i = 0; i < shapeX.length; i++) {
-						int ptsSel = (int) Math.floor(map(i, 0f, shapeX.length, 0, ts.size()));
-						shapePreX[i] = map(ts.get(ptsSel).x, 0f, 1f, -1f, 1f);
-						shapePreY[i] = map(ts.get(ptsSel).y, 0f, 1f, 1f, -1f);
-					}
-				}
-				*/
-					busy = false;
-			}else{
-				
-				
-			}
-			
-		} else if (bwm == -1) {
+		} else if (bwm == -1) { // waveform gen v1 jul 2017
 			if (waveSize() != waveSizeValOG)
 				waveSize(waveSizeValOG);
 			if (shapes.size() > 0) {
@@ -981,44 +840,44 @@ public class XYscope {
 			}
 		}
 
-		if(bwm != 3){
-		// easing
-		if (useEase) {
-			easeWaves();
-		} else {
-			for (int i = 0; i < shapePreX.length; i++) {
-				shapeX[i] = shapePreX[i];
-				shapeY[i] = shapePreY[i];
-				
-				if(useVectrex){
-					if(vectrexRotation == 90){
-						shapeX[i] = shapePreY[i];
-						shapeY[i] = shapePreX[i]*-1;
-					}else if(vectrexRotation == -90){
-						shapeX[i] = shapePreY[i]*-1;
-						shapeY[i] = shapePreX[i];
-					}else if(vectrexRotation == 0){
-						shapeX[i] = shapePreX[i]*-1;
-						shapeY[i] = shapePreY[i]*-1;
+		if(bwm == -1 || bwm == -2){
+			// easing
+			if (useEase) {
+				easeWaves();
+			} else {
+				for (int i = 0; i < shapePreX.length; i++) {
+					shapeX[i] = shapePreX[i];
+					shapeY[i] = shapePreY[i];
+					
+					if(useVectrex){
+						if(vectrexRotation == 90){
+							shapeX[i] = shapePreY[i];
+							shapeY[i] = shapePreX[i]*-1;
+						}else if(vectrexRotation == -90){
+							shapeX[i] = shapePreY[i]*-1;
+							shapeY[i] = shapePreX[i];
+						}else if(vectrexRotation == 0){
+							shapeX[i] = shapePreX[i]*-1;
+							shapeY[i] = shapePreY[i]*-1;
+						}
+					}
+					
+					if (zaxis && useZ)
+						shapeZ[i] = shapePreZ[i];
+				}
+	
+				if (zaxis && useZ) {
+					for (int i = 0; i < shapePreZ.length; i++) {
+						shapeZ[i] = shapePreZ[i];
 					}
 				}
-				
-				if (zaxis && useZ)
-					shapeZ[i] = shapePreZ[i];
 			}
-
-			if (zaxis && useZ) {
-				for (int i = 0; i < shapePreZ.length; i++) {
-					shapeZ[i] = shapePreZ[i];
-				}
+	
+			// smooth
+			if (useSmooth) {
+				tableX.smooth(smoothVal);
+				tableY.smooth(smoothVal);
 			}
-		}
-
-		// smooth
-		if (useSmooth) {
-			tableX.smooth(smoothVal);
-			tableY.smooth(smoothVal);
-		}
 		}
 	}
 
@@ -1497,7 +1356,6 @@ public class XYscope {
 		beginShape();
 		vertex(x1, y1);
 		vertex(x1, y1);
-		vertex(x1, y1);
 		if (zaxis && useZ)
 			vertex(x1, y1);
 		endShape();
@@ -1511,7 +1369,6 @@ public class XYscope {
 	 */
 	public void point(float x1, float y1, float z1) {
 		beginShape();
-		vertex(x1, y1, z1);
 		vertex(x1, y1, z1);
 		vertex(x1, y1, z1);
 		if (zaxis && useZ)
@@ -1529,9 +1386,8 @@ public class XYscope {
 		beginShape();
 		vertex(x1, y1);
 		vertex(x2, y2);
-		vertex(x2, y2); // ** needed for bwm == 1
 		if (zaxis && useZ)
-			vertex(x1, y1);
+			vertex(x2, y2);
 		endShape();
 	}
 
@@ -1592,7 +1448,7 @@ public class XYscope {
 	public void vertex(float x, float y, float z) {
 		float x1out = norm(myParent.screenX(x, y, z), 0f, xyWidth + 0f);
 		float y1out = norm(myParent.screenY(x, y, z), 0f, xyHeight + 0f);
-		float z1out = norm(myParent.screenY(x, y, z), 0f, xyHeight + 0f);
+		float z1out = norm(myParent.screenZ(x, y, z), 0f, xyHeight + 0f);
 		vertexAdd(new PVector(x1out, y1out, z1out));
 	}
 
@@ -1602,7 +1458,6 @@ public class XYscope {
 	 * @see <a href="https://processing.org/reference/vertex_.html">Processing
 	 *      Reference -> vertex()</a>
 	 */
-
 	public void vertex(PVector p) {
 		vertex(p.x, p.y, p.z);
 	}
@@ -1617,7 +1472,6 @@ public class XYscope {
 	 * @see <a href="https://processing.org/reference/endShape_.html">Processing
 	 *      Reference -> endShape()</a>
 	 */
-
 	public void endShape() {
 		// not necessary in current setup. maybe useful later for z-axis
 		if(currentShape.size() > 1)
