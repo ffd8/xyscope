@@ -8,7 +8,7 @@
  */
 
 /* PREFS */
-int kinectVer = 1; //(1 = xbox 360 vs 2 = xbox one)
+int kinectVer = 1; // 1 = xbox 360 vs 2 = xbox one
 
 // import and create instance of XYscope
 import xyscope.*;

@@ -27,7 +27,7 @@ void setup() {
 
 
   // initialize XYscope with default sound out
-  xy = new XYscope(this, "", 192000);
+  xy = new XYscope(this, "", 96000);
 
   moog = new MoogFilter( 1200, 0.75 );
   moog.setChannelCount(2);

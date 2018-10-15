@@ -6,9 +6,8 @@
  cc teddavis.org 2017
  */
 
-// import and create instance of XYscope
+// import XYscope
 import xyscope.*;
-XYscope xy;
 
 // minim is required to generate audio
 import ddf.minim.*; 

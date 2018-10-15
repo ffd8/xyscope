@@ -30,9 +30,6 @@ void setup() {
   // initialize XYscope with default/custom sound out
   xy = new XYscope(this, "");
 
-  // on real scope, smoothWaves() may help avoid hard points
-  //xy.smoothWaves(true);
-
   // initialize Geomerative
   RG.init(this);
 }

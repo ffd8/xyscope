@@ -22,9 +22,12 @@ void setup() {
   size(400, 600, P3D);
   background(0);
 
-  // initialize XYscope with custom outXY, outZ
+  // initialize XYscope with custom outXY
   // left blank so it runs, but fill in with your audio card
-  xy = new XYscope(this, "", "");
+  xy = new XYscope(this, "");
+  
+  // custom z
+  xy.z("");
 
   // initialize waves
   resetWaves();

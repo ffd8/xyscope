@@ -86,7 +86,6 @@ public class XYscope {
 	boolean useSmooth = false;
 	int smoothVal = 12;
 
-	boolean zaxis = false;
 	float zaxisMax = 1f;
 	float zaxisMin = -1f;
 	int zoffset = 1;
@@ -153,7 +152,7 @@ public class XYscope {
 	 * @param theParent
 	 *            PApplet to apply to, typically 'this'
 	 * @param sampleR
-	 *            Sample rate for soundcard (44100, 48000, 192000).
+	 *            Sample rate for soundcard (44100, 48000, 96000, 192000).
 	 */
 	public XYscope(PApplet theParent, int sampleR) {
 		myParent = theParent;
@@ -274,14 +273,16 @@ public class XYscope {
 	}
 
 	private void setWaveTableZ() {
-		if (zaxis) {
+		if (useZ) {
 			tableZ = new XYWavetable(2);
 			waveZ = new Oscil(freq.z, amp.z, tableZ);
 			tableZ.setWaveform(shapeZ);
 			waveZ.patch(outZ); // need pan?? or gets full amp to both channels?
-		}
+			waveReset();
+			sumXY.unpatch(outXY);
+			sumXY.patch(outXY);
 
-		waveReset();
+		}
 	}
 
 	/**
@@ -293,7 +294,7 @@ public class XYscope {
 	public void waveReset() {
 		waveX.reset();
 		waveY.reset();
-		if (zaxis)
+		if (useZ)
 			waveZ.reset();
 	}
 
@@ -308,7 +309,6 @@ public class XYscope {
 		Mixer mixerZ = getMixerByName(zMixer);
 		minimZ.setOutputMixer(mixerZ);
 		outZ = minimZ.getLineOut(Minim.STEREO, waveSizeValOG);
-		zaxis = true;
 		useZ = true;
 		setWaveTableZ();
 	}
@@ -329,7 +329,6 @@ public class XYscope {
 		Mixer mixerZ = getMixerByName(zMixer);
 		minimZ.setOutputMixer(mixerZ);
 		outZ = minimZ.getLineOut(Minim.STEREO, waveSizeValOG, sampleR);
-		zaxis = true;
 		useZ = true;
 		setWaveTableZ();
 	}
@@ -486,7 +485,7 @@ public class XYscope {
 		
 		waveX.setAmplitude(amp.x);
 		waveY.setAmplitude(amp.y);
-		if (zaxis) {
+		if (useZ) {
 			amp.z = constrain(newAmp, 0f, 1f);
 			waveZ.setAmplitude(amp.z);
 		}
@@ -524,7 +523,7 @@ public class XYscope {
 		amp.y = constrain(newAmpY, 0f, 1f);
 		waveX.setAmplitude(amp.x);
 		waveY.setAmplitude(amp.y);
-		if (zaxis) {
+		if (useZ) {
 			amp.z = constrain(newAmpZ, 0f, 1f);
 			waveZ.setAmplitude(amp.z);
 		}
@@ -544,7 +543,7 @@ public class XYscope {
 		float tempY = constrain(newAmp.y, 0f, 1f);
 		waveX.setAmplitude(tempX);
 		waveY.setAmplitude(tempY);
-		if (zaxis) {
+		if (useZ) {
 			float tempZ = constrain(newAmp.z, 0f, 1f);
 			waveZ.setAmplitude(tempZ);
 		}
@@ -569,7 +568,7 @@ public class XYscope {
 		freq = new PVector(newFreq, newFreq, newFreq);
 		waveX.setFrequency(freq.x);
 		waveY.setFrequency(freq.y);
-		if (zaxis)
+		if (useZ)
 			waveZ.setFrequency(freq.z);
 	}
 
@@ -603,7 +602,7 @@ public class XYscope {
 		freq.y = newFreqY;
 		waveX.setFrequency(freq.x);
 		waveY.setFrequency(freq.y);
-		if (zaxis) {
+		if (useZ) {
 			freq.z = newFreqZ;
 			waveZ.setFrequency(freq.z);
 		}
@@ -620,7 +619,7 @@ public class XYscope {
 		freq = newFreq;
 		waveX.setFrequency(freq.x);
 		waveY.setFrequency(freq.y);
-		if (zaxis)
+		if (useZ)
 			waveZ.setFrequency(freq.z);
 	}
 
@@ -710,7 +709,7 @@ public class XYscope {
 		// shapePreZ = new float[waveSizeVal];
 		tableX.setWaveform(shapeX);
 		tableY.setWaveform(shapeY);
-		// if (zaxis)
+		// if (useZ)
 		// tableZ.setWaveform(shapeZ);
 	}
 
@@ -726,7 +725,7 @@ public class XYscope {
 				shapePreY[i] = 0;
 			}
 	
-			if (zaxis && useZ) {
+			if (useZ) {
 				for (int i = 0; i < shapeZ.length; i++) {
 					shapePreZ[i] = zaxisMin;
 				}
@@ -750,19 +749,27 @@ public class XYscope {
 			if (shapes.size() > 0) {
 				XYWavetable mx = new XYWavetable(2);
 				XYWavetable my = new XYWavetable(2);
+				XYWavetable mz = new XYWavetable(2);
 				float[] mfx = new float[0];
 				float[] mfy = new float[0];
+				float[] mfz = new float[0];
 				for (XYShape shape : shapes) {
 					XYWavetable tx = new XYWavetable(2);
 					XYWavetable ty = new XYWavetable(2);
+					XYWavetable tz = new XYWavetable(2);
 					float[] tfx = new float[shape.size()];
 					float[] tfy = new float[shape.size()];
+					float[] tfz = new float[shape.size()];
 					
 					for (int i = 0; i < shape.size(); i++) {
 						if(i < tfx.length){
 							PVector tc = shape.get(i);
 							tfx[i] = map(tc.x, 0f, 1f, -1f, 1f);
 							tfy[i] = map(tc.y, 0f, 1f, 1f, -1f);
+							tfz[i] = zaxisMax;
+							
+							if(tc.z == 1f)
+								tfz[i] = zaxisMin;
 							
 							float tfxx = tfx[i];
 							float tfyy = tfy[i];
@@ -784,15 +791,21 @@ public class XYscope {
 					
 					tx.setWaveform(tfx);
 					ty.setWaveform(tfy);
+					tz.setWaveform(tfz);
 					mfx = concat(mfx, tx.getWaveform());
 					mfy = concat(mfy, ty.getWaveform());
+					mfz = concat(mfz, tz.getWaveform());
 					
 				}
 				tableX.setWaveform(mfx);
 				tableY.setWaveform(mfy);
+				if(useZ)
+					tableZ.setWaveform(mfz);
 			}else{
 				tableX.setWaveform(new float[0]);
 				tableY.setWaveform(new float[0]);
+				if(useZ)
+					tableZ.setWaveform(new float[0]);
 			}
 		} else if (bwm == -2) { // waveform gen v2 may 2018
 			if (shapes.size() > 0) {
@@ -862,11 +875,11 @@ public class XYscope {
 						}
 					}
 					
-					if (zaxis && useZ)
+					if (useZ)
 						shapeZ[i] = shapePreZ[i];
 				}
 	
-				if (zaxis && useZ) {
+				if (useZ) {
 					for (int i = 0; i < shapePreZ.length; i++) {
 						shapeZ[i] = shapePreZ[i];
 					}
@@ -973,7 +986,7 @@ public class XYscope {
 		easeWaves(shapePreX, shapeX);
 		easeWaves(shapePreY, shapeY);
 
-		if (zaxis && useZ) {
+		if (useZ) {
 			easeWaves(shapePreZ, shapeZ);
 
 		}
@@ -1186,13 +1199,14 @@ public class XYscope {
 		}
 
 		// Z
-		if (zaxis) {
+		if (useZ) {
 			myParent.stroke(50, 255, 50);
 			myParent.beginShape();
-			for (int i = 0; i < shapeZ.length; i++) {
-				float xpos = map(i, 0f, (float) shapeZ.length, 0f, (float) xyWidth);
-				myParent.vertex(xpos, (float) xyHeight * .5f - ((float) xyHeight * 0.125f) * shapeZ[i]);// tableZ.value(i));
+			for (int i = 0; i < xyWidth; i++) {
+				myParent.vertex(i, (float) xyHeight * .5f
+						- ((float) xyHeight * 0.125f) * tableZ.value((float) i / (float) xyWidth));
 			}
+			
 			myParent.endShape();
 		}
 		myParent.popMatrix();
@@ -1233,13 +1247,13 @@ public class XYscope {
 		}
 		myParent.endShape();
 
-		if (zaxis) {
+		if (useZ) {
 			myParent.beginShape();
 			for (int i = 0; i < outZ.bufferSize() - 1; i++) {
 				float xAudio = map(i, 0, outZ.bufferSize(), 0, xyWidth);
-				float rAudio = outZ.right.get(i);
+				float lAudio = outZ.left.get(i);
 				// curveVertex(lAudio, rAudio*-1);
-				myParent.vertex(xAudio, xyHeight * .5f - (xyHeight * .25f) * rAudio);
+				myParent.vertex(xAudio, xyHeight * .5f - (xyHeight * .25f) * lAudio);
 			}
 			myParent.endShape();
 
@@ -1306,8 +1320,8 @@ public class XYscope {
 		vertex(x1 + w1, y1 + h1);
 		vertex(x1, y1 + h1);
 		vertex(x1, y1);
-		if (zaxis && useZ)
-			vertex(x1, y1);
+//		if (useZ)
+//			vertex(x1, y1);
 		endShape();
 	}
 
@@ -1356,8 +1370,8 @@ public class XYscope {
 		beginShape();
 		vertex(x1, y1);
 		vertex(x1, y1);
-		if (zaxis && useZ)
-			vertex(x1, y1);
+//		if (useZ)
+//			vertex(x1, y1);
 		endShape();
 	}
 
@@ -1371,8 +1385,8 @@ public class XYscope {
 		beginShape();
 		vertex(x1, y1, z1);
 		vertex(x1, y1, z1);
-		if (zaxis && useZ)
-			vertex(x1, y1, z1);
+//		if (useZ)
+//			vertex(x1, y1, z1);
 		endShape();
 	}
 
@@ -1386,8 +1400,23 @@ public class XYscope {
 		beginShape();
 		vertex(x1, y1);
 		vertex(x2, y2);
-		if (zaxis && useZ)
-			vertex(x2, y2);
+//		if (useZ)
+//			vertex(x2, y2);
+		endShape();
+	}
+	
+	/**
+	 * Draw line, expects line(x1, y1, z1, x2, y2, z2).
+	 * 
+	 * @see <a href="https://processing.org/reference/line_.html">Processing
+	 *      Reference -> line()</a>
+	 */
+	public void line(float x1, float y1, float z1, float x2, float y2, float z2) {
+		beginShape();
+		vertex(x1, y1, z1);
+		vertex(x2, y2, z2);
+//		if (useZ)
+//			vertex(x2, y2, z2);
 		endShape();
 	}
 
@@ -1448,8 +1477,8 @@ public class XYscope {
 	public void vertex(float x, float y, float z) {
 		float x1out = norm(myParent.screenX(x, y, z), 0f, xyWidth + 0f);
 		float y1out = norm(myParent.screenY(x, y, z), 0f, xyHeight + 0f);
-		float z1out = norm(myParent.screenZ(x, y, z), 0f, xyHeight + 0f);
-		vertexAdd(new PVector(x1out, y1out, z1out));
+		//float z1out = norm(myParent.screenZ(x, y, z), 0f, xyHeight + 0f);
+		vertexAdd(new PVector(x1out, y1out, 0));
 	}
 
 	/**
