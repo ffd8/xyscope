@@ -97,6 +97,22 @@ public class XYscope {
 	int vectrexWidth = 310;
 	int vectrexHeight = 410;
 	
+	// LASER VARS
+	boolean useLaser = false;
+	Minim minimR, minimBG;
+	public Oscil waveR, waveG, waveB; 
+	XYWavetable tableR, tableG, tableB;
+	Pan panR = new Pan(1);
+	Pan panG = new Pan(-1);
+	Pan panB = new Pan(1);
+	AudioOutput outR, outBG;
+	public float[] shapeR = new float[waveSizeVal];
+	public float[] shapeG = new float[waveSizeVal];
+	public float[] shapeB = new float[waveSizeVal];
+	private XYShape RGBshape = new XYShape();
+
+
+	
 	int xyWidth, xyHeight;
 
 	/**
@@ -209,6 +225,8 @@ public class XYscope {
 	private void initMinim() {
 		minim = new Minim(myParent);
 		minimZ = new Minim(myParent);
+		minimR = new Minim(myParent);
+		minimBG = new Minim(myParent);
 	}
 
 	private void setMixer() {
@@ -460,6 +478,54 @@ public class XYscope {
 		amp(vectrexAmpInit);
 	}
 	
+	/**
+	 * laser details here
+	 * 
+	 * @param vrot
+	 *            int for degrees of rotation, 90 or -90
+	 */
+	public void laser(String inR, String inBG){
+		Mixer mixerR = getMixerByName(inR);
+		Mixer mixerBG = getMixerByName(inBG);
+		minimR.setOutputMixer(mixerR);
+		minimBG.setOutputMixer(mixerBG);
+		outR = minimR.getLineOut(Minim.STEREO, waveSizeValOG);
+		outBG = minimBG.getLineOut(Minim.STEREO, waveSizeValOG);
+		setWaveTableRGB();
+		useLaser = true;
+	}
+	
+	private void setWaveTableRGB() {
+		
+
+		tableR = new XYWavetable(2);
+		waveR = new Oscil(freq.x, amp.x, tableR);
+		tableR.setWaveform(shapeR);
+		waveR.patch(panR).patch(outR);
+		
+		tableG = new XYWavetable(2);
+		waveG = new Oscil(freq.x, amp.x, tableG);
+		tableG.setWaveform(shapeG);
+		waveG.patch(panG).patch(outBG);
+
+		tableB = new XYWavetable(2);
+		waveB = new Oscil(freq.x, amp.x, tableB);
+		tableB.setWaveform(shapeB);
+		waveB.patch(panB).patch(outBG);
+
+	}
+	
+	public void stroke(float r, float g, float b){
+//		for(int i=0; i < shapeR.length; i++){
+//			shapeR[i] = map(r, 0f, 255f, 0f, 1f);
+//			shapeG[i] = map(g, 0f, 255f, 0f, 1f);
+//			shapeB[i] = map(b, 0f, 255f, 0f, 1f);
+//		}
+		float mr = map(r, 0f, 255f, 0f, 1f);
+		float mg = map(g, 0f, 255f, 0f, 1f);
+		float mb = map(b, 0f, 255f, 0f, 1f);
+		RGBshape.add(new PVector(mr, mg, mb));
+	}
 
 	/**
 	 * Get current amplitude setting of XY oscillators.
@@ -733,6 +799,9 @@ public class XYscope {
 	
 			shapes = new XYShapeList();
 			currentShape = null;
+			
+			if(useLaser)
+				RGBshape = new XYShape();
 		}
 	}
 
@@ -753,6 +822,7 @@ public class XYscope {
 				float[] mfx = new float[0];
 				float[] mfy = new float[0];
 				float[] mfz = new float[0];
+				
 				for (XYShape shape : shapes) {
 					XYWavetable tx = new XYWavetable(2);
 					XYWavetable ty = new XYWavetable(2);
@@ -801,6 +871,30 @@ public class XYscope {
 				tableY.setWaveform(mfy);
 				if(useZ)
 					tableZ.setWaveform(mfz);
+				
+				if(useLaser){
+					if(RGBshape.size() > 0){
+						float[] tfr = new float[RGBshape.size()];
+						float[] tfg = new float[RGBshape.size()];
+						float[] tfb = new float[RGBshape.size()];
+						for (int i = 0; i < RGBshape.size(); i++) {
+							PVector tc = RGBshape.get(i);
+							tfr[i] = tc.x;
+							tfg[i] = tc.y;
+							tfb[i] = tc.z;
+						}
+						tableR.setWaveform(tfr);
+						tableG.setWaveform(tfg);
+						tableB.setWaveform(tfb);
+					}else{
+						float[] tfr = {250f/255f};
+						float[] tfg = {220f/255f};
+						float[] tfb = {90f/255f};
+						tableR.setWaveform(tfr);
+						tableG.setWaveform(tfg);
+						tableB.setWaveform(tfb);
+					}
+				}
 			}else{
 				tableX.setWaveform(new float[0]);
 				tableY.setWaveform(new float[0]);
