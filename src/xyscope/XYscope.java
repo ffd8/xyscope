@@ -110,8 +110,9 @@ public class XYscope {
 	public float[] shapeG = new float[waveSizeVal];
 	public float[] shapeB = new float[waveSizeVal];
 	private XYShape RGBshape = new XYShape();
-
-
+	PVector lsFreq = new PVector(initFreq, initFreq, initFreq);
+	PVector lsWB = new PVector(250, 220, 90);
+	int lsDash = 1;
 	
 	int xyWidth, xyHeight;
 
@@ -479,10 +480,12 @@ public class XYscope {
 	}
 	
 	/**
-	 * laser details here
+	 * Activate use of laser, by assigning 3 additional (2x stereo pairs) audio channels for controlling the RGB modulation.
 	 * 
-	 * @param vrot
-	 *            int for degrees of rotation, 90 or -90
+	 * @param mixerR
+	 *            String for name of audio channel for Red
+	 * @param mixerBG
+	 *            String for name of audio channel for Blue/Green
 	 */
 	public void laser(String inR, String inBG){
 		Mixer mixerR = getMixerByName(inR);
@@ -515,16 +518,66 @@ public class XYscope {
 
 	}
 	
+	/**
+	 * Returns current values for setting white balance from RGB mixture in laser.
+	 * 
+	 * @return PVector
+	 */
+	public PVector strokeWB(){
+		return lsWB;
+	}
+	
+	public void strokeWB(float wbR, float wbG, float wbB){
+		strokeWB(new PVector(wbR, wbG, wbB));
+	}
+	
+	public void strokeWB(PVector wbPV){
+		lsWB = new PVector(wbPV.x, wbPV.y, wbPV.z);
+	}
+	
+	public int strokeDash(){
+		return lsDash;
+	}
+	
+	public void strokeDash(int newDash){
+		lsDash = newDash;
+	}
+	
 	public void stroke(float r, float g, float b){
-//		for(int i=0; i < shapeR.length; i++){
-//			shapeR[i] = map(r, 0f, 255f, 0f, 1f);
-//			shapeG[i] = map(g, 0f, 255f, 0f, 1f);
-//			shapeB[i] = map(b, 0f, 255f, 0f, 1f);
-//		}
-		float mr = map(r, 0f, 255f, 0f, 1f);
-		float mg = map(g, 0f, 255f, 0f, 1f);
-		float mb = map(b, 0f, 255f, 0f, 1f);
+		stroke(new PVector(r, g, b));
+	}
+	
+	public void stroke(PVector rgb){
+		float mr = map(rgb.x, 0f, 255f, 0f, 1f);
+		float mg = map(rgb.y, 0f, 255f, 0f, 1f);
+		float mb = map(rgb.z, 0f, 255f, 0f, 1f);
+		if(rgb.x == 255f && rgb.y == 255f && rgb.z == 255f){
+			mr = lsWB.x / 255f;
+			mg = lsWB.y / 255f;
+			mb = lsWB.z / 255f;
+		}
 		RGBshape.add(new PVector(mr, mg, mb));
+	}
+	
+	public PVector strokeFreq() {
+		return lsFreq;
+	}
+	
+	public void strokeFreq(float newFreq) {
+		lsFreq = new PVector(newFreq, newFreq, newFreq);
+		strokeFreq(lsFreq);
+	}
+	
+	public void strokeFreq(float newFreqR, float newFreqG, float newFreqB) {
+		lsFreq = new PVector(newFreqR, newFreqG, newFreqB);
+		strokeFreq(lsFreq);
+	}
+	
+	public void strokeFreq(PVector newFreq) {
+		lsFreq = newFreq;
+		waveR.setFrequency(lsFreq.x);
+		waveG.setFrequency(lsFreq.y);
+		waveB.setFrequency(lsFreq.z);
 	}
 
 	/**
@@ -874,11 +927,20 @@ public class XYscope {
 				
 				if(useLaser){
 					if(RGBshape.size() > 0){
-						float[] tfr = new float[RGBshape.size()];
-						float[] tfg = new float[RGBshape.size()];
-						float[] tfb = new float[RGBshape.size()];
-						for (int i = 0; i < RGBshape.size(); i++) {
-							PVector tc = RGBshape.get(i);
+						XYShape RGBtemp = new XYShape();
+						for (int i = 0; i < RGBshape.size()*lsDash; i++) {
+							PVector tc = RGBshape.get(floor(map(i, 0, RGBshape.size()*lsDash, 0, RGBshape.size())));
+							if(i%2==0 && lsDash > 1)
+								tc = new PVector(-1, -1, -1);
+							RGBtemp.add(tc);
+						}
+						float[] tfr = new float[RGBtemp.size()];
+						float[] tfg = new float[RGBtemp.size()];
+						float[] tfb = new float[RGBtemp.size()];
+						for (int i = 0; i < RGBtemp.size(); i++) {
+							PVector tc = RGBtemp.get(i);
+//							if(i%2 ==0)
+//								tc = new PVector(-1, -1, -1);
 							tfr[i] = tc.x;
 							tfg[i] = tc.y;
 							tfb[i] = tc.z;
@@ -887,9 +949,9 @@ public class XYscope {
 						tableG.setWaveform(tfg);
 						tableB.setWaveform(tfb);
 					}else{
-						float[] tfr = {250f/255f};
-						float[] tfg = {220f/255f};
-						float[] tfb = {90f/255f};
+						float[] tfr = {lsWB.x/255f};
+						float[] tfg = {lsWB.y/255f};
+						float[] tfb = {lsWB.z/255f};
 						tableR.setWaveform(tfr);
 						tableG.setWaveform(tfg);
 						tableB.setWaveform(tfb);
@@ -900,6 +962,10 @@ public class XYscope {
 				tableY.setWaveform(new float[0]);
 				if(useZ)
 					tableZ.setWaveform(new float[0]);
+				
+				tableR.setWaveform(new float[0]);
+				tableG.setWaveform(new float[0]);
+				tableB.setWaveform(new float[0]);
 			}
 		} else if (bwm == -2) { // waveform gen v2 may 2018
 			if (shapes.size() > 0) {
@@ -1275,6 +1341,7 @@ public class XYscope {
 					- ((float) xyHeight * 0.125f) * tableY.value((float) i / (float) xyWidth));
 		}
 		myParent.endShape();
+		
 
 		if (debugWave) {
 			float mouseT = (myParent.mouseX / (float) xyWidth);
@@ -1305,6 +1372,51 @@ public class XYscope {
 		}
 		myParent.popMatrix();
 		myParent.popStyle();
+	}
+	
+	/**
+	 * Draw waveform of all laser RGB oscillators.
+	 * <ul>
+	 * <li>Red: R
+	 * <li>Green: G
+	 * <li>Blue: B
+	 */
+	public void drawRGB(){
+		if(useLaser){
+			myParent.pushStyle();
+			myParent.noFill();
+			myParent.pushMatrix();
+			
+			//R
+			myParent.stroke(255, 50, 50);
+			myParent.beginShape();
+			for (int i = 0; i < xyWidth; i++) {
+				myParent.vertex(i, (float) xyHeight * .25f
+						- ((float) xyHeight * 0.125f) * tableR.value((float) i / (float) xyWidth));
+			}
+			myParent.endShape();
+			
+			//G
+			myParent.stroke(50, 255, 50);
+			myParent.beginShape();
+			for (int i = 0; i < xyWidth; i++) {
+				myParent.vertex(i, (float) xyHeight * .5f
+						- ((float) xyHeight * 0.125f) * tableG.value((float) i / (float) xyWidth));
+			}
+			myParent.endShape();
+			
+			//B
+			myParent.stroke(50, 50, 255);
+			myParent.beginShape();
+			for (int i = 0; i < xyWidth; i++) {
+				myParent.vertex(i, (float) xyHeight * .75f
+						- ((float) xyHeight * 0.125f) * tableB.value((float) i / (float) xyWidth));
+			}
+			myParent.endShape();
+			
+			myParent.popMatrix();
+			myParent.popStyle();
+		}
 	}
 
 	/**
