@@ -112,7 +112,7 @@ public class XYscope {
 	private XYShape RGBshape = new XYShape();
 	PVector lsFreq = new PVector(initFreq, initFreq, initFreq);
 	PVector lsWB = new PVector(250, 220, 90);
-	int lsDash = 1;
+	PVector lsDash = new PVector(1, 1, 1);
 	
 	int xyWidth, xyHeight;
 
@@ -535,12 +535,20 @@ public class XYscope {
 		lsWB = new PVector(wbPV.x, wbPV.y, wbPV.z);
 	}
 	
-	public int strokeDash(){
+	public PVector strokeDash(){
 		return lsDash;
 	}
 	
 	public void strokeDash(int newDash){
-		lsDash = newDash;
+		strokeDash(new PVector(newDash, newDash, newDash));
+	}
+	
+	public void strokeDash(int newDashR, int newDashG, int newDashB){
+		strokeDash(new PVector(newDashR, newDashG, newDashB));
+	}
+	
+	public void strokeDash(PVector newDash){
+		lsDash = new PVector(newDash.x, newDash.y, newDash.z);
 	}
 	
 	public void stroke(float r, float g, float b){
@@ -927,27 +935,48 @@ public class XYscope {
 				
 				if(useLaser){
 					if(RGBshape.size() > 0){
-						XYShape RGBtemp = new XYShape();
-						for (int i = 0; i < RGBshape.size()*lsDash; i++) {
-							PVector tc = RGBshape.get(floor(map(i, 0, RGBshape.size()*lsDash, 0, RGBshape.size())));
-							if(i%2==0 && lsDash > 1)
-								tc = new PVector(-1, -1, -1);
-							RGBtemp.add(tc);
-						}
-						float[] tfr = new float[RGBtemp.size()];
-						float[] tfg = new float[RGBtemp.size()];
-						float[] tfb = new float[RGBtemp.size()];
-						for (int i = 0; i < RGBtemp.size(); i++) {
-							PVector tc = RGBtemp.get(i);
-//							if(i%2 ==0)
+						
+						
+						buildColorWave(tableR, floor(lsDash.x));
+						buildColorWave(tableG, floor(lsDash.y));
+						buildColorWave(tableB, floor(lsDash.z));
+
+//						XYShape Gtemp = new XYShape();
+//						XYShape Btemp = new XYShape();
+//						XYShape Rtemp = new XYShape();						
+//						for (int i = 0; i < RGBshape.size()*lsDash.x; i++) {
+//							PVector tc = RGBshape.get(floor(map(i, 0, RGBshape.size()*lsDash.x, 0, RGBshape.size())));
+//							if(i%2==0 && lsDash.x > 1)
 //								tc = new PVector(-1, -1, -1);
-							tfr[i] = tc.x;
-							tfg[i] = tc.y;
-							tfb[i] = tc.z;
-						}
-						tableR.setWaveform(tfr);
-						tableG.setWaveform(tfg);
-						tableB.setWaveform(tfb);
+//							Rtemp.add(tc);
+//						}
+//						float[] tfr = new float[Rtemp.size()];
+//						for (int i = 0; i < Rtemp.size(); i++) {
+//							PVector tc = Rtemp.get(i);
+//							tfr[i] = tc.x;
+//						}
+//						tableR.setWaveform(tfr);
+//
+//						
+//						for (int i = 0; i < RGBshape.size()*lsDash; i++) {
+//							PVector tc = RGBshape.get(floor(map(i, 0, RGBshape.size()*lsDash, 0, RGBshape.size())));
+//							if(i%2==0 && lsDash > 1)
+//								tc = new PVector(-1, -1, -1);
+//							RGBtemp.add(tc);
+//						}
+//						float[] tfg = new float[RGBtemp.size()];
+//						float[] tfb = new float[RGBtemp.size()];
+//						for (int i = 0; i < RGBtemp.size(); i++) {
+//							PVector tc = RGBtemp.get(i);
+////							if(i%2 ==0)
+////								tc = new PVector(-1, -1, -1);
+//							tfr[i] = tc.x;
+//							tfg[i] = tc.y;
+//							tfb[i] = tc.z;
+//						}
+//						tableR.setWaveform(tfr);
+//						tableG.setWaveform(tfg);
+//						tableB.setWaveform(tfb);
 					}else{
 						float[] tfr = {lsWB.x/255f};
 						float[] tfg = {lsWB.y/255f};
@@ -1052,6 +1081,22 @@ public class XYscope {
 				tableY.smooth(smoothVal);
 			}
 		}
+	}
+	
+	private void buildColorWave(XYWavetable tableTemp, int dashTemp){
+		XYShape shapeTemp = new XYShape();						
+		for (int i = 0; i < RGBshape.size()*dashTemp; i++) {
+			PVector tc = RGBshape.get(floor(map(i, 0, RGBshape.size()*dashTemp, 0, RGBshape.size())));
+			if(i%2==0 && dashTemp > 1)
+				tc = new PVector(-1, -1, -1);
+			shapeTemp.add(tc);
+		}
+		float[] tfr = new float[shapeTemp.size()];
+		for (int i = 0; i < shapeTemp.size(); i++) {
+			PVector tc = shapeTemp.get(i);
+			tfr[i] = tc.x;
+		}
+		tableTemp.setWaveform(tfr);
 	}
 
 	/**
