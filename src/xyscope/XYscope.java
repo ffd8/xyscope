@@ -85,6 +85,8 @@ public class XYscope {
 	boolean useZ = false;
 	boolean useSmooth = false;
 	int smoothVal = 12;
+	boolean useLimit = false;
+	float limitVal = 1;
 
 	float zaxisMax = 1f;
 	float zaxisMin = -1f;
@@ -405,6 +407,25 @@ public class XYscope {
 	public void zRange(float zMin, float zMax) {
 		zaxisMin = zMin;
 		zaxisMax = zMax;
+	}
+	
+	/**
+	 * Returns current value for limiting drawings to edges of screen.
+	 * 
+	 * @return limitVal
+	 */
+	public float limitPath(){
+		return limitVal;
+	}
+	
+	/**
+	 * Limit drawing of any points beyond this border amount from the edge
+	 * 
+	 * @param float for limiting border from edges
+	 */
+	public void limitPath(float newLimitVal){
+		limitVal = newLimitVal;
+		useLimit = true;
 	}
 	
 	/**
@@ -935,48 +956,9 @@ public class XYscope {
 				
 				if(useLaser){
 					if(RGBshape.size() > 0){
-						
-						
 						buildColorWave(tableR, floor(lsDash.x));
 						buildColorWave(tableG, floor(lsDash.y));
 						buildColorWave(tableB, floor(lsDash.z));
-
-//						XYShape Gtemp = new XYShape();
-//						XYShape Btemp = new XYShape();
-//						XYShape Rtemp = new XYShape();						
-//						for (int i = 0; i < RGBshape.size()*lsDash.x; i++) {
-//							PVector tc = RGBshape.get(floor(map(i, 0, RGBshape.size()*lsDash.x, 0, RGBshape.size())));
-//							if(i%2==0 && lsDash.x > 1)
-//								tc = new PVector(-1, -1, -1);
-//							Rtemp.add(tc);
-//						}
-//						float[] tfr = new float[Rtemp.size()];
-//						for (int i = 0; i < Rtemp.size(); i++) {
-//							PVector tc = Rtemp.get(i);
-//							tfr[i] = tc.x;
-//						}
-//						tableR.setWaveform(tfr);
-//
-//						
-//						for (int i = 0; i < RGBshape.size()*lsDash; i++) {
-//							PVector tc = RGBshape.get(floor(map(i, 0, RGBshape.size()*lsDash, 0, RGBshape.size())));
-//							if(i%2==0 && lsDash > 1)
-//								tc = new PVector(-1, -1, -1);
-//							RGBtemp.add(tc);
-//						}
-//						float[] tfg = new float[RGBtemp.size()];
-//						float[] tfb = new float[RGBtemp.size()];
-//						for (int i = 0; i < RGBtemp.size(); i++) {
-//							PVector tc = RGBtemp.get(i);
-////							if(i%2 ==0)
-////								tc = new PVector(-1, -1, -1);
-//							tfr[i] = tc.x;
-//							tfg[i] = tc.y;
-//							tfb[i] = tc.z;
-//						}
-//						tableR.setWaveform(tfr);
-//						tableG.setWaveform(tfg);
-//						tableB.setWaveform(tfb);
 					}else{
 						float[] tfr = {lsWB.x/255f};
 						float[] tfg = {lsWB.y/255f};
@@ -1691,8 +1673,8 @@ public class XYscope {
 	 *      "https://processing.org/reference/curveVertex_.html">Processing
 	 *      Reference -> curveVertex()</a>
 	 */
-	public void curveVertex(float x1, float y1) {
-		vertex(x1, y1);
+	public void curveVertex(float x, float y) {
+		vertex(new PVector(x, y, 0));
 	}
 
 	/**
@@ -1703,8 +1685,8 @@ public class XYscope {
 	 *      "https://processing.org/reference/curveVertex_.html">Processing
 	 *      Reference -> curveVertex()</a>
 	 */
-	public void curveVertex(float x1, float y1, float z1) {
-		vertex(x1, y1, z1);
+	public void curveVertex(float x, float y, float z) {
+		vertex(new PVector(x, y, z));
 	}
 
 	/**
@@ -1714,9 +1696,7 @@ public class XYscope {
 	 *      Reference -> vertex()</a>
 	 */
 	public void vertex(float x, float y) {
-		float x1out = norm(myParent.screenX(x, y), 0f, xyWidth + 0f);
-		float y1out = norm(myParent.screenY(x, y), 0f, xyHeight + 0f);
-		vertexAdd(new PVector(x1out, y1out));
+		vertex(new PVector(x, y, 0));
 	}
 
 	/**
@@ -1726,10 +1706,7 @@ public class XYscope {
 	 *      Reference -> vertex()</a>
 	 */
 	public void vertex(float x, float y, float z) {
-		float x1out = norm(myParent.screenX(x, y, z), 0f, xyWidth + 0f);
-		float y1out = norm(myParent.screenY(x, y, z), 0f, xyHeight + 0f);
-		//float z1out = norm(myParent.screenZ(x, y, z), 0f, xyHeight + 0f);
-		vertexAdd(new PVector(x1out, y1out, 0));
+		vertex(new PVector(x, y, z));
 	}
 
 	/**
@@ -1739,11 +1716,21 @@ public class XYscope {
 	 *      Reference -> vertex()</a>
 	 */
 	public void vertex(PVector p) {
-		vertex(p.x, p.y, p.z);
+		vertexAdd(p);
 	}
 	
 	private void vertexAdd(PVector p) {
-		currentShape.add(p);
+		float x = norm(myParent.screenX(p.x, p.y), 0f, xyWidth + 0f);
+		float y = norm(myParent.screenY(p.x, p.y), 0f, xyHeight + 0f);
+		PVector normP = new PVector(x, y, 0);
+		if(useLimit){
+	        float sx = myParent.screenX(p.x, p.y, p.z);
+	        float sy = myParent.screenY(p.x, p.y, p.z);
+			if ((sx >= limitVal && sx <= xyWidth - limitVal) && (sy >= limitVal && sy <= xyHeight - limitVal))
+				currentShape.add(normP);
+		}else{
+			currentShape.add(normP);
+		}
 	}
 
 	/**
