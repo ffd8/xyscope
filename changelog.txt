@@ -4,6 +4,23 @@
 
 
 ////////////////////////////////////////////////////////////
+XYScope 2.2.0 (REV 4) - 20.11.2018
+
++ NEW & IMPROVED buildWaves() technique (added -2, to those who like previous)
++ Fixed Minim bug that caused crash since last release (thanks Hansi Raber!)
++ limitPath() only draw if shape within border from edges
++ Laser: RGB Laser compatibility (using 2x stereo audio pairs for RGB control)
++ Laser: stroke() to control RGB color
++ Laser: strokeFreq() to control RGB frequencies
++ Laser: strokeDash() to add dashes to RGB waves
++ Laser: spotKiller() to only draw if image bigger than spotKiller() size (default 20)
++ Laser: laserLPF() default low-pass-filter is 10k hz, use laserLPF() to customize
++ Examples: added xtra_obj + xtra_video + xtra_laser
+
+* minor vertex() code changes
+
+
+////////////////////////////////////////////////////////////
 XYScope 2.1.0 (REV 3) - 25.07.2018
 
 + Vectrex compatibility (custom aspect ratio and +/- 90° rotation)
@@ -21,7 +38,7 @@ Added/dropped/refactored enough features to need 2.0
   If points matches buffer (1024), previously technique is used to maintain speed.
 + debugView(), for seeing drawWaveform() to drawXY() relationship (thanks Hansi3D!)
 + waveSize() function for dynamically changing wavetable size
-+ XYscope instance for custom sample rates (41000, 48000, 192000, etc)
++ XYscope instance for custom sample rates (41000, 48000, 96000, 192000, etc)
 + waveReset() now public incase time-step of oscillators slip when changing freq()
 
 * Technique for adding z-axis, 

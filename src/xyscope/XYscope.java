@@ -77,6 +77,9 @@ public class XYscope {
 	boolean debugWave = false;
 	int debugSize = 10;
 	boolean busy = false;
+	
+	boolean useLimitPoints = false;
+	int limitPointsVal = waveSizeValOG;
 
 	int ellipseDetail = 30;
 
@@ -115,6 +118,9 @@ public class XYscope {
 	PVector lsFreq = new PVector(initFreq, initFreq, initFreq);
 	PVector lsWB = new PVector(250, 220, 90);
 	PVector lsDash = new PVector(1, 1, 1);
+	MoogFilter moog;
+	float laserLPFVal = 10000.0f;
+	float laserCutoffVal = 20f;
 	
 	int xyWidth, xyHeight;
 
@@ -409,6 +415,32 @@ public class XYscope {
 		zaxisMax = zMax;
 	}
 	
+	
+	
+	/**
+	 * Returns current value for limiting drawings to edges of screen.
+	 * 
+	 * @return limitVal
+	 */
+	public float limitPoints(){
+		return limitPointsVal;
+	}
+	
+	/**
+	 * Limit drawing of any points beyond this border amount from the edge
+	 * 
+	 * @param float for limiting border from edges
+	 */
+	public void limitPoints(int newLimitPointsVal){
+		if(newLimitPointsVal == 0){
+			useLimitPoints = false;
+		}else{
+			limitPointsVal = abs(newLimitPointsVal);
+			useLimitPoints = true;
+		}
+	}
+	
+	
 	/**
 	 * Returns current value for limiting drawings to edges of screen.
 	 * 
@@ -517,11 +549,15 @@ public class XYscope {
 		outBG = minimBG.getLineOut(Minim.STEREO, waveSizeValOG);
 		setWaveTableRGB();
 		useLaser = true;
+		
+		//LPF
+		moog = new MoogFilter( laserLPFVal, 0f );
+		moog.setChannelCount(2);
+		sumXY.unpatch(outXY);
+		sumXY.patch(moog).patch(outXY);
 	}
 	
 	private void setWaveTableRGB() {
-		
-
 		tableR = new XYWavetable(2);
 		waveR = new Oscil(freq.x, amp.x, tableR);
 		tableR.setWaveform(shapeR);
@@ -536,7 +572,33 @@ public class XYscope {
 		waveB = new Oscil(freq.x, amp.x, tableB);
 		tableB.setWaveform(shapeB);
 		waveB.patch(panB).patch(outBG);
-
+	}
+	
+	/**
+	 * Returns current frequency of low-pass-filter for laser.
+	 * 
+	 * @return float
+	 */
+	public float laserLPF(){
+		return laserLPFVal;
+	}
+	
+	public void laserLPF(float newLaserLPFVal){
+		laserLPFVal = constrain(newLaserLPFVal, .1f, 20000f);
+		moog.frequency.setLastValue(laserLPFVal);
+	}
+	
+	/**
+	 * Returns current value spot-killer (minimum size of drawing for laser).
+	 * 
+	 * @return float
+	 */
+	public float spotKiller(){
+		return laserCutoffVal;
+	}
+	
+	public void spotKiller(float newLaserCutoffVal){
+		laserCutoffVal = abs(newLaserCutoffVal);
 	}
 	
 	/**
@@ -949,24 +1011,62 @@ public class XYscope {
 					mfz = concat(mfz, tz.getWaveform());
 					
 				}
-				tableX.setWaveform(mfx);
-				tableY.setWaveform(mfy);
-				if(useZ)
-					tableZ.setWaveform(mfz);
+				
+				// limit points
+				if(useLimitPoints && (mfx.length > limitPointsVal || mfy.length > limitPointsVal)){
+					float[] lx = new float[limitPointsVal];
+					float[] ly = new float[limitPointsVal];
+					float[] lz = new float[limitPointsVal];
+					for(int i=0; i < limitPointsVal; i++){
+						int mfxSel = floor(map(i, 0, limitPointsVal, 0, mfx.length));
+						int mfySel = floor(map(i, 0, limitPointsVal, 0, mfy.length));
+						int mfzSel = floor(map(i, 0, limitPointsVal, 0, mfz.length));
+						lx[i] = mfx[mfxSel];
+						ly[i] = mfy[mfySel];
+						lz[i] = mfz[mfzSel];
+					}
+					tableX.setWaveform(lx);
+					tableY.setWaveform(ly);
+					if(useZ)
+						tableZ.setWaveform(lz);
+				}else{
+					tableX.setWaveform(mfx);
+					tableY.setWaveform(mfy);
+					if(useZ)
+						tableZ.setWaveform(mfz);
+				}
+				
 				
 				if(useLaser){
-					if(RGBshape.size() > 0){
-						buildColorWave(tableR, floor(lsDash.x));
-						buildColorWave(tableG, floor(lsDash.y));
-						buildColorWave(tableB, floor(lsDash.z));
-					}else{
-						float[] tfr = {lsWB.x/255f};
-						float[] tfg = {lsWB.y/255f};
-						float[] tfb = {lsWB.z/255f};
-						tableR.setWaveform(tfr);
-						tableG.setWaveform(tfg);
-						tableB.setWaveform(tfb);
+					// spotkiller checkSize
+					boolean checkSize = false;
+					AudioOutput tempXY = outXY;
+					
+					for (int i = 0; i < tempXY.bufferSize() - 1; i++) {
+						float lAudio = abs(tempXY.left.get(i) * (float) xyWidth / 2);
+						float rAudio = abs(tempXY.right.get(i) * (float) xyHeight / 2);
+						if(lAudio > laserCutoffVal || rAudio > laserCutoffVal)
+							checkSize = true;
 					}
+					if(checkSize){
+						if(RGBshape.size() > 0){
+							buildColorWave(tableR, floor(lsDash.x));
+							buildColorWave(tableG, floor(lsDash.y));
+							buildColorWave(tableB, floor(lsDash.z));
+						}else{
+							float[] tfr = {lsWB.x/255f};
+							float[] tfg = {lsWB.y/255f};
+							float[] tfb = {lsWB.z/255f};
+							tableR.setWaveform(tfr);
+							tableG.setWaveform(tfg);
+							tableB.setWaveform(tfb);
+						}
+					}else{
+						tableR.setWaveform(new float[0]);
+						tableG.setWaveform(new float[0]);
+						tableB.setWaveform(new float[0]);
+					}
+					
 				}
 			}else{
 				tableX.setWaveform(new float[0]);
