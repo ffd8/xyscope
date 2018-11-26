@@ -88,7 +88,7 @@ public class XYscope {
 	boolean useZ = false;
 	boolean useSmooth = false;
 	int smoothVal = 12;
-	boolean useLimit = false;
+	boolean useLimitPath = false;
 	float limitVal = 1;
 
 	float zaxisMax = 1f;
@@ -457,7 +457,7 @@ public class XYscope {
 	 */
 	public void limitPath(float newLimitVal){
 		limitVal = newLimitVal;
-		useLimit = true;
+		useLimitPath = true;
 	}
 	
 	/**
@@ -1074,9 +1074,11 @@ public class XYscope {
 				if(useZ)
 					tableZ.setWaveform(new float[0]);
 				
-				tableR.setWaveform(new float[0]);
-				tableG.setWaveform(new float[0]);
-				tableB.setWaveform(new float[0]);
+				if(useLaser){
+					tableR.setWaveform(new float[0]);
+					tableG.setWaveform(new float[0]);
+					tableB.setWaveform(new float[0]);
+				}
 			}
 		} else if (bwm == -2) { // waveform gen v2 may 2018
 			if (shapes.size() > 0) {
@@ -1774,7 +1776,7 @@ public class XYscope {
 	 *      Reference -> curveVertex()</a>
 	 */
 	public void curveVertex(float x, float y) {
-		vertex(new PVector(x, y, 0));
+		vertex(new PVector(x, y, 0), false);
 	}
 
 	/**
@@ -1786,7 +1788,7 @@ public class XYscope {
 	 *      Reference -> curveVertex()</a>
 	 */
 	public void curveVertex(float x, float y, float z) {
-		vertex(new PVector(x, y, z));
+		vertex(new PVector(x, y, z), true);
 	}
 
 	/**
@@ -1796,7 +1798,7 @@ public class XYscope {
 	 *      Reference -> vertex()</a>
 	 */
 	public void vertex(float x, float y) {
-		vertex(new PVector(x, y, 0));
+		vertex(new PVector(x, y, 0), false);
 	}
 
 	/**
@@ -1806,7 +1808,7 @@ public class XYscope {
 	 *      Reference -> vertex()</a>
 	 */
 	public void vertex(float x, float y, float z) {
-		vertex(new PVector(x, y, z));
+		vertex(new PVector(x, y, z), true);
 	}
 
 	/**
@@ -1815,17 +1817,30 @@ public class XYscope {
 	 * @see <a href="https://processing.org/reference/vertex_.html">Processing
 	 *      Reference -> vertex()</a>
 	 */
-	public void vertex(PVector p) {
-		vertexAdd(p);
+	public void vertex(PVector p, boolean mode3D) {
+		vertexAdd(p, mode3D);
 	}
 	
-	private void vertexAdd(PVector p) {
-		float x = norm(myParent.screenX(p.x, p.y), 0f, xyWidth + 0f);
-		float y = norm(myParent.screenY(p.x, p.y), 0f, xyHeight + 0f);
+	private void vertexAdd(PVector p, boolean mode3D) {
+		float x, y;
+		if(mode3D){
+			x = norm(myParent.screenX(p.x, p.y, p.z), 0f, xyWidth + 0f);
+			y = norm(myParent.screenY(p.x, p.y, p.z), 0f, xyHeight + 0f);
+		}else{
+			x = norm(myParent.screenX(p.x, p.y), 0f, xyWidth + 0f);
+			y = norm(myParent.screenY(p.x, p.y), 0f, xyHeight + 0f);
+			
+		}
 		PVector normP = new PVector(x, y, 0);
-		if(useLimit){
-	        float sx = myParent.screenX(p.x, p.y, p.z);
-	        float sy = myParent.screenY(p.x, p.y, p.z);
+		if(useLimitPath){
+			float sx, sy;
+			if(mode3D){
+		        sx = myParent.screenX(p.x, p.y, p.z);
+		        sy = myParent.screenY(p.x, p.y, p.z);
+			}else{
+		        sx = myParent.screenX(p.x, p.y);
+		        sy = myParent.screenY(p.x, p.y);
+			}
 			if ((sx >= limitVal && sx <= xyWidth - limitVal) && (sy >= limitVal && sy <= xyHeight - limitVal))
 				currentShape.add(normP);
 		}else{
