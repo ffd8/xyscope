@@ -4,10 +4,10 @@
 
 
 ////////////////////////////////////////////////////////////
-XYScope 2.2.0 (REV 4) - 20.11.2018
+XYScope 2.2.0 (REV 4) - 07.12.2018
 
 + NEW & IMPROVED buildWaves() technique (added -2, to those who like previous)
-+ Fixed Minim bug that caused crash since last release (thanks Hansi Raber!)
++ Fixed Minim WaveTable bug that caused crash since REV 2 (thanks Hansi Raber!)
 + limitPath() only draw if shape within border from edges
 + Laser: RGB Laser compatibility (using 2x stereo audio pairs for RGB control)
 + Laser: stroke() to control RGB color
@@ -48,7 +48,7 @@ Added/dropped/refactored enough features to need 2.0
 * Stopped performing waveReset() on freq change, which preventing nice beam walk-around
 
 - XYscope instance with z-axis, now has dedicated function 
-- XYscope instance with int for mixerID, can change too often, use mixerString
+- XYscope instance with int for mixerID, can change too often, select mixer by name
 - addPoint(), just use point()
 - wavePoints(set), new structure doesn't allow, use custom buildWaves()
 - sortPoints(), was a rough test, do within sketch instead

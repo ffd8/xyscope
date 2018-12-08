@@ -46,7 +46,7 @@ public class XYscope {
 	public Summer sumXY, sumZ;
 
 	/**
-	 * minim Oscil, for customizing of oscillators.
+	 * minim Oscil, for customizing XYZ oscillators.
 	 */
 	public Oscil waveX, waveY, waveZ;
 
@@ -77,7 +77,7 @@ public class XYscope {
 	boolean debugWave = false;
 	int debugSize = 10;
 	boolean busy = false;
-	
+
 	boolean useLimitPoints = false;
 	int limitPointsVal = waveSizeValOG;
 
@@ -94,23 +94,29 @@ public class XYscope {
 	float zaxisMax = 1f;
 	float zaxisMin = -1f;
 	int zoffset = 1;
-	
+
 	boolean useVectrex = false;
 	float vectrexAmp = .82f;
 	float vectrexAmpInit = .6f;
 	int vectrexRotation = 0;
 	int vectrexWidth = 310;
 	int vectrexHeight = 410;
-	
+
 	// LASER VARS
 	boolean useLaser = false;
 	Minim minimR, minimBG;
+
+	/**
+	 * minim Oscil, for customizing RGB oscillators.
+	 */
 	public Oscil waveR, waveG, waveB; 
+
 	XYWavetable tableR, tableG, tableB;
 	Pan panR = new Pan(1);
 	Pan panG = new Pan(-1);
 	Pan panB = new Pan(1);
 	AudioOutput outR, outBG;
+
 	public float[] shapeR = new float[waveSizeVal];
 	public float[] shapeG = new float[waveSizeVal];
 	public float[] shapeB = new float[waveSizeVal];
@@ -121,7 +127,7 @@ public class XYscope {
 	MoogFilter moog;
 	float laserLPFVal = 10000.0f;
 	float laserCutoffVal = 20f;
-	
+
 	int xyWidth, xyHeight;
 
 	/**
@@ -196,7 +202,7 @@ public class XYscope {
 	 * @param xyMixer
 	 *            Name of custom sound mixer to use for XY.
 	 * @param sampleR
-	 *            Sample rate for soundcard (44100, 48000, 192000).
+	 *            Sample rate for soundcard (44100, 48000, 96000, 192000).
 	 */
 	public XYscope(PApplet theParent, String xyMixer, int sampleR) {
 		myParent = theParent;
@@ -207,7 +213,7 @@ public class XYscope {
 	}
 
 	private void welcome() {
-		System.out.println("XYscope 2.1.0 by Ted Davis http://teddavis.org");
+		System.out.println("XYscope 2.2.0 by Ted Davis http://teddavis.org");
 		xyWidth = myParent.width;
 		xyHeight = myParent.height;
 	}
@@ -317,7 +323,6 @@ public class XYscope {
 	 * frequencies.
 	 * 
 	 */
-
 	public void waveReset() {
 		waveX.reset();
 		waveY.reset();
@@ -362,6 +367,8 @@ public class XYscope {
 
 	/**
 	 * Check if z-axis waveform is being automatically drawn from added shapes.
+	 * 
+	 * @return boolean
 	 */
 	public boolean zAuto() {
 		return useZ;
@@ -383,7 +390,7 @@ public class XYscope {
 	 * Get ArrayList of all coordinates used for vector drawing as an ArrayList
 	 * of PVector's.
 	 * 
-	 * @return ArrayList<PVector>
+	 * @return ArrayList of PVector
 	 */
 	public ArrayList<PVector> wavePoints() {
 		return shapes.getPoints();
@@ -414,22 +421,20 @@ public class XYscope {
 		zaxisMin = zMin;
 		zaxisMax = zMax;
 	}
-	
-	
-	
+
 	/**
-	 * Returns current value for limiting drawings to edges of screen.
+	 * Returns current value for limiting drawing by number of points.
 	 * 
 	 * @return limitVal
 	 */
 	public float limitPoints(){
 		return limitPointsVal;
 	}
-	
+
 	/**
-	 * Limit drawing of any points beyond this border amount from the edge
+	 * Limit drawing by number of points
 	 * 
-	 * @param float for limiting border from edges
+	 * @param newLimitPointsVal int for limiting number of points
 	 */
 	public void limitPoints(int newLimitPointsVal){
 		if(newLimitPointsVal == 0){
@@ -439,27 +444,27 @@ public class XYscope {
 			useLimitPoints = true;
 		}
 	}
-	
-	
+
+
 	/**
-	 * Returns current value for limiting drawings to edges of screen.
+	 * Returns current value for border that limtis rendering to edges of screen.
 	 * 
 	 * @return limitVal
 	 */
 	public float limitPath(){
 		return limitVal;
 	}
-	
+
 	/**
-	 * Limit drawing of any points beyond this border amount from the edge
+	 * Only render points within specified border from the edge
 	 * 
-	 * @param float for limiting border from edges
+	 * @param newLimitVal float for border limit from edges
 	 */
 	public void limitPath(float newLimitVal){
 		limitVal = newLimitVal;
 		useLimitPath = true;
 	}
-	
+
 	/**
 	 * Use XYscope on a modded Vectrex monitor for XYZ input. This will automatically adjust the canvas and amplitude settings to match the ratio of the Vectrex.
 	 * 
@@ -467,7 +472,7 @@ public class XYscope {
 	public void vectrex(){
 		vectrex(vectrexWidth, vectrexHeight, vectrexAmpInit, vectrexRotation);
 	}
-	
+
 	/**
 	 * Use XYscope on a modded Vectrex monitor for XYZ input. This will automatically adjust the canvas and amplitude settings to match the ratio of the Vectrex. You can customize the rotation of the monitor +/- 90° if landscape oriented.
 	 * 
@@ -486,7 +491,7 @@ public class XYscope {
 			vectrex(vectrexWidth, vectrexHeight, vectrexAmpInit, vectrexRotation);
 		}
 	}
-	
+
 	/**
 	 * Use XYscope on a modded Vectrex monitor for XYZ input. Set custom width, height, initial amplitude scaling and rotation/orientation. 
 	 * 
@@ -494,7 +499,7 @@ public class XYscope {
 	 *            int for width of canvas, default is 330
 	 * @param vh
 	 *            int for height of canvas, default is 410
-	 * @param vrot
+	 * @param vamp
 	 *            float for initial amplitude adjustment of signal to screen (0.0 - 1.0), default is .6
 	 * @param vrot
 	 *            int for degrees of rotation, 90 or -90, default is 0
@@ -509,8 +514,8 @@ public class XYscope {
 		vectrexAmpInit = vamp;
 		amp(vectrexAmpInit);
 	}
-	
-	
+
+
 	/**
 	 * Get current amplitude difference used for ratio of Vectrex.
 	 * 
@@ -519,8 +524,8 @@ public class XYscope {
 	public float vectrexRatio(){
 		return vectrexAmp;
 	}
-	
-	
+
+
 	/**
 	 * Set current amplitude difference used for ratio of Vectrex.
 	 * 
@@ -531,13 +536,13 @@ public class XYscope {
 		vectrexAmp = constrain(vectrexAmpVal, 0f, 1f);
 		amp(vectrexAmpInit);
 	}
-	
+
 	/**
-	 * Activate use of laser, by assigning 3 additional (2x stereo pairs) audio channels for controlling the RGB modulation.
+	 * Activate use of RGB laser, by assigning 3 additional (2x stereo pairs) audio channels for controlling the RGB modulation.
 	 * 
-	 * @param mixerR
+	 * @param inR
 	 *            String for name of audio channel for Red
-	 * @param mixerBG
+	 * @param inBG
 	 *            String for name of audio channel for Blue/Green
 	 */
 	public void laser(String inR, String inBG){
@@ -549,20 +554,20 @@ public class XYscope {
 		outBG = minimBG.getLineOut(Minim.STEREO, waveSizeValOG);
 		setWaveTableRGB();
 		useLaser = true;
-		
+
 		//LPF
 		moog = new MoogFilter( laserLPFVal, 0f );
 		moog.setChannelCount(2);
 		sumXY.unpatch(outXY);
 		sumXY.patch(moog).patch(outXY);
 	}
-	
+
 	private void setWaveTableRGB() {
 		tableR = new XYWavetable(2);
 		waveR = new Oscil(freq.x, amp.x, tableR);
 		tableR.setWaveform(shapeR);
 		waveR.patch(panR).patch(outR);
-		
+
 		tableG = new XYWavetable(2);
 		waveG = new Oscil(freq.x, amp.x, tableG);
 		tableG.setWaveform(shapeG);
@@ -573,21 +578,27 @@ public class XYscope {
 		tableB.setWaveform(shapeB);
 		waveB.patch(panB).patch(outBG);
 	}
-	
+
 	/**
-	 * Returns current frequency of low-pass-filter for laser.
+	 * Returns current frequency of low-pass-filter (LPF) for laser.
 	 * 
 	 * @return float
 	 */
 	public float laserLPF(){
 		return laserLPFVal;
 	}
-	
+
+	/**
+	 * Set new frequency for low-pass-filter (LPF) of laser as float. Be careful to stay within range that's safe for your Galvos.
+	 * 
+	 * @param newLaserLPFVal
+	 *            float between 0.1 - 20000.0
+	 */
 	public void laserLPF(float newLaserLPFVal){
 		laserLPFVal = constrain(newLaserLPFVal, .1f, 20000f);
 		moog.frequency.setLastValue(laserLPFVal);
 	}
-	
+
 	/**
 	 * Returns current value spot-killer (minimum size of drawing for laser).
 	 * 
@@ -596,11 +607,17 @@ public class XYscope {
 	public float spotKiller(){
 		return laserCutoffVal;
 	}
-	
+
+	/**
+	 * Set new value for spotKiller (won't draw if XY shape is smaller than provided value).
+	 * 
+	 * @param newLaserCutoffVal
+	 *            float 
+	 */
 	public void spotKiller(float newLaserCutoffVal){
 		laserCutoffVal = abs(newLaserCutoffVal);
 	}
-	
+
 	/**
 	 * Returns current values for setting white balance from RGB mixture in laser.
 	 * 
@@ -609,35 +626,35 @@ public class XYscope {
 	public PVector strokeWB(){
 		return lsWB;
 	}
-	
+
 	public void strokeWB(float wbR, float wbG, float wbB){
 		strokeWB(new PVector(wbR, wbG, wbB));
 	}
-	
+
 	public void strokeWB(PVector wbPV){
 		lsWB = new PVector(wbPV.x, wbPV.y, wbPV.z);
 	}
-	
+
 	public PVector strokeDash(){
 		return lsDash;
 	}
-	
+
 	public void strokeDash(int newDash){
 		strokeDash(new PVector(newDash, newDash, newDash));
 	}
-	
+
 	public void strokeDash(int newDashR, int newDashG, int newDashB){
 		strokeDash(new PVector(newDashR, newDashG, newDashB));
 	}
-	
+
 	public void strokeDash(PVector newDash){
 		lsDash = new PVector(newDash.x, newDash.y, newDash.z);
 	}
-	
+
 	public void stroke(float r, float g, float b){
 		stroke(new PVector(r, g, b));
 	}
-	
+
 	public void stroke(PVector rgb){
 		float mr = map(rgb.x, 0f, 255f, 0f, 1f);
 		float mg = map(rgb.y, 0f, 255f, 0f, 1f);
@@ -649,21 +666,21 @@ public class XYscope {
 		}
 		RGBshape.add(new PVector(mr, mg, mb));
 	}
-	
+
 	public PVector strokeFreq() {
 		return lsFreq;
 	}
-	
+
 	public void strokeFreq(float newFreq) {
 		lsFreq = new PVector(newFreq, newFreq, newFreq);
 		strokeFreq(lsFreq);
 	}
-	
+
 	public void strokeFreq(float newFreqR, float newFreqG, float newFreqB) {
 		lsFreq = new PVector(newFreqR, newFreqG, newFreqB);
 		strokeFreq(lsFreq);
 	}
-	
+
 	public void strokeFreq(PVector newFreq) {
 		lsFreq = newFreq;
 		waveR.setFrequency(lsFreq.x);
@@ -692,7 +709,7 @@ public class XYscope {
 		if(useVectrex){
 			amp.x *= vectrexAmp;
 		}
-		
+
 		waveX.setAmplitude(amp.x);
 		waveY.setAmplitude(amp.y);
 		if (useZ) {
@@ -724,6 +741,8 @@ public class XYscope {
 	 * @param newAmpX
 	 *            value between 0.0 - 1.0
 	 * @param newAmpY
+	 *            value between 0.0 - 1.0
+	 * @param newAmpZ
 	 *            value between 0.0 - 1.0
 	 */
 	public void amp(float newAmpX, float newAmpY, float newAmpZ) {
@@ -875,7 +894,7 @@ public class XYscope {
 	/**
 	 * Enable/Disable debug view for comparing waveform to shape.
 	 * 
-	 * @param easeBool
+	 * @param debugBool
 	 *            true/false
 	 */
 	public void debugView(boolean debugBool) {
@@ -895,7 +914,7 @@ public class XYscope {
 	 * Get size of wavetables. By default, it's the same as the
 	 * outXY.bufferSize()
 	 * 
-	 * @param newSize
+	 * @return newSize
 	 *            int
 	 */
 	public int waveSize() {
@@ -934,16 +953,16 @@ public class XYscope {
 				shapePreX[i] = 0;
 				shapePreY[i] = 0;
 			}
-	
+
 			if (useZ) {
 				for (int i = 0; i < shapeZ.length; i++) {
 					shapePreZ[i] = zaxisMin;
 				}
 			}
-	
+
 			shapes = new XYShapeList();
 			currentShape = null;
-			
+
 			if(useLaser)
 				RGBshape = new XYShape();
 		}
@@ -955,7 +974,7 @@ public class XYscope {
 	 * New Rendering mode in place, if old dots style is preferred, use
 	 * buildWaves(-1).
 	 * 
-	 * @see points()
+	 * @param bwm int for buildWaves mode
 	 */
 	public void buildWaves(int bwm) {
 		if(bwm == 0){ // waveform gen v3 sep 2018
@@ -966,7 +985,7 @@ public class XYscope {
 				float[] mfx = new float[0];
 				float[] mfy = new float[0];
 				float[] mfz = new float[0];
-				
+
 				for (XYShape shape : shapes) {
 					XYWavetable tx = new XYWavetable(2);
 					XYWavetable ty = new XYWavetable(2);
@@ -974,20 +993,20 @@ public class XYscope {
 					float[] tfx = new float[shape.size()];
 					float[] tfy = new float[shape.size()];
 					float[] tfz = new float[shape.size()];
-					
+
 					for (int i = 0; i < shape.size(); i++) {
 						if(i < tfx.length){
 							PVector tc = shape.get(i);
 							tfx[i] = map(tc.x, 0f, 1f, -1f, 1f);
 							tfy[i] = map(tc.y, 0f, 1f, 1f, -1f);
 							tfz[i] = zaxisMax;
-							
+
 							if(tc.z == 1f)
 								tfz[i] = zaxisMin;
-							
+
 							float tfxx = tfx[i];
 							float tfyy = tfy[i];
-							
+
 							if(useVectrex){
 								if(vectrexRotation == 90){
 									tfx[i] = tfyy;
@@ -1002,16 +1021,16 @@ public class XYscope {
 							}
 						}
 					}
-					
+
 					tx.setWaveform(tfx);
 					ty.setWaveform(tfy);
 					tz.setWaveform(tfz);
 					mfx = concat(mfx, tx.getWaveform());
 					mfy = concat(mfy, ty.getWaveform());
 					mfz = concat(mfz, tz.getWaveform());
-					
+
 				}
-				
+
 				// limit points
 				if(useLimitPoints && (mfx.length > limitPointsVal || mfy.length > limitPointsVal)){
 					float[] lx = new float[limitPointsVal];
@@ -1035,13 +1054,13 @@ public class XYscope {
 					if(useZ)
 						tableZ.setWaveform(mfz);
 				}
-				
-				
+
+
 				if(useLaser){
 					// spotkiller checkSize
 					boolean checkSize = false;
 					AudioOutput tempXY = outXY;
-					
+
 					for (int i = 0; i < tempXY.bufferSize() - 1; i++) {
 						float lAudio = abs(tempXY.left.get(i) * (float) xyWidth / 2);
 						float rAudio = abs(tempXY.right.get(i) * (float) xyHeight / 2);
@@ -1066,14 +1085,14 @@ public class XYscope {
 						tableG.setWaveform(new float[0]);
 						tableB.setWaveform(new float[0]);
 					}
-					
+
 				}
 			}else{
 				tableX.setWaveform(new float[0]);
 				tableY.setWaveform(new float[0]);
 				if(useZ)
 					tableZ.setWaveform(new float[0]);
-				
+
 				if(useLaser){
 					tableR.setWaveform(new float[0]);
 					tableG.setWaveform(new float[0]);
@@ -1134,7 +1153,7 @@ public class XYscope {
 				for (int i = 0; i < shapePreX.length; i++) {
 					shapeX[i] = shapePreX[i];
 					shapeY[i] = shapePreY[i];
-					
+
 					if(useVectrex){
 						if(vectrexRotation == 90){
 							shapeX[i] = shapePreY[i];
@@ -1147,18 +1166,18 @@ public class XYscope {
 							shapeY[i] = shapePreY[i]*-1;
 						}
 					}
-					
+
 					if (useZ)
 						shapeZ[i] = shapePreZ[i];
 				}
-	
+
 				if (useZ) {
 					for (int i = 0; i < shapePreZ.length; i++) {
 						shapeZ[i] = shapePreZ[i];
 					}
 				}
 			}
-	
+
 			// smooth
 			if (useSmooth) {
 				tableX.smooth(smoothVal);
@@ -1166,7 +1185,7 @@ public class XYscope {
 			}
 		}
 	}
-	
+
 	private void buildColorWave(XYWavetable tableTemp, int dashTemp){
 		XYShape shapeTemp = new XYShape();						
 		for (int i = 0; i < RGBshape.size()*dashTemp; i++) {
@@ -1187,8 +1206,6 @@ public class XYscope {
 	 * Generate the XY(Z) oscillator waveforms from all added points/shapes for
 	 * sending audio to vector display. Call this after drawing any primitive
 	 * shapes.
-	 * 
-	 * @see points()
 	 */
 	public void buildWaves() {
 		buildWaves(0);
@@ -1200,7 +1217,9 @@ public class XYscope {
 	 * 
 	 * @param newWave
 	 *            Array of normalized floats between 0.0 - 1.0
-	 * @see waveSize();
+	 *            
+	 * @see #waveSize()
+	 * 
 	 */
 	public void buildX(float[] newWave) {
 		for (int i = 0; i < newWave.length; i++) {
@@ -1223,7 +1242,7 @@ public class XYscope {
 	 * 
 	 * @param newWave
 	 *            Array of normalized floats between 0.0 - 1.0
-	 * @see waveSize();
+	 * @see #waveSize()
 	 */
 	public void buildY(float[] newWave) {
 		for (int i = 0; i < newWave.length; i++) {
@@ -1246,7 +1265,7 @@ public class XYscope {
 	 * 
 	 * @param newWave
 	 *            Array of normalized floats between 0.0 - 1.0
-	 * @see waveSize();
+	 * @see #waveSize()
 	 */
 	public void buildZ(float[] newWave) {
 		for (int i = 0; i < newWave.length; i++) {
@@ -1284,8 +1303,7 @@ public class XYscope {
 	/**
 	 * Check if waveform smoothing is enabled/disabled.
 	 * 
-	 * @param easeVal
-	 *            true/false
+	 * @return boolean
 	 */
 	public boolean smoothWaves() {
 		return useSmooth;
@@ -1305,9 +1323,11 @@ public class XYscope {
 	/**
 	 * Get number of steps for smoothing waveforms.
 	 * 
+	 * @return int
+	 * 
 	 * @see <a href=
 	 *      "http://code.compartmental.net/minim/wavetable_method_smooth.html">Minim
-	 *      -> Wavetable -> smooth()</a>
+	 *      » Wavetable » smooth()</a>
 	 */
 	public int smoothWavesAmount() {
 		return smoothVal;
@@ -1320,7 +1340,7 @@ public class XYscope {
 	 *            new int value for smoothening waveform
 	 * @see <a href=
 	 *      "http://code.compartmental.net/minim/wavetable_method_smooth.html">Minim
-	 *      -> Wavetable -> smooth()</a>
+	 *      » Wavetable » smooth()</a>
 	 */
 	public void smoothWavesAmount(int swAmount) {
 		smoothVal = swAmount;
@@ -1407,7 +1427,7 @@ public class XYscope {
 		for (int i = 0; i < tempXY.bufferSize() - 1; i++) {
 			float lAudio = tempXY.left.get(i) * (float) xyWidth / 2;
 			float rAudio = tempXY.right.get(i) * (float) xyHeight / 2;
-			
+
 			if(useVectrex){
 				if(vectrexRotation == 90){
 					rAudio = tempXY.left.get(i) * (float) xyHeight / 2;
@@ -1420,7 +1440,7 @@ public class XYscope {
 					rAudio = tempXY.right.get(i) * (float) xyHeight / 2 * -1f * vectrexAmp;
 				}
 			}
-			
+
 			myParent.curveVertex(lAudio, rAudio * -1f);
 		}
 
@@ -1444,9 +1464,10 @@ public class XYscope {
 	/**
 	 * Draw waveform of all XYZ oscillators.
 	 * <ul>
-	 * <li>Red: X
-	 * <li>Blue: Y
-	 * <li>Green: Z
+	 * <li>Red: X</li>
+	 * <li>Blue: Y</li>
+	 * <li>Green: Z</li>
+	 * </ul>
 	 */
 	public void drawWaveform() {
 		myParent.pushStyle();
@@ -1470,7 +1491,7 @@ public class XYscope {
 					- ((float) xyHeight * 0.125f) * tableY.value((float) i / (float) xyWidth));
 		}
 		myParent.endShape();
-		
+
 
 		if (debugWave) {
 			float mouseT = (myParent.mouseX / (float) xyWidth);
@@ -1496,26 +1517,27 @@ public class XYscope {
 				myParent.vertex(i, (float) xyHeight * .5f
 						- ((float) xyHeight * 0.125f) * tableZ.value((float) i / (float) xyWidth));
 			}
-			
+
 			myParent.endShape();
 		}
 		myParent.popMatrix();
 		myParent.popStyle();
 	}
-	
+
 	/**
 	 * Draw waveform of all laser RGB oscillators.
 	 * <ul>
-	 * <li>Red: R
-	 * <li>Green: G
-	 * <li>Blue: B
+	 * <li>Red: R</li>
+	 * <li>Green: G</li>
+	 * <li>Blue: B</li>
+	 * </ul>
 	 */
 	public void drawRGB(){
 		if(useLaser){
 			myParent.pushStyle();
 			myParent.noFill();
 			myParent.pushMatrix();
-			
+
 			//R
 			myParent.stroke(255, 50, 50);
 			myParent.beginShape();
@@ -1524,7 +1546,7 @@ public class XYscope {
 						- ((float) xyHeight * 0.125f) * tableR.value((float) i / (float) xyWidth));
 			}
 			myParent.endShape();
-			
+
 			//G
 			myParent.stroke(50, 255, 50);
 			myParent.beginShape();
@@ -1533,7 +1555,7 @@ public class XYscope {
 						- ((float) xyHeight * 0.125f) * tableG.value((float) i / (float) xyWidth));
 			}
 			myParent.endShape();
-			
+
 			//B
 			myParent.stroke(50, 50, 255);
 			myParent.beginShape();
@@ -1542,7 +1564,7 @@ public class XYscope {
 						- ((float) xyHeight * 0.125f) * tableB.value((float) i / (float) xyWidth));
 			}
 			myParent.endShape();
-			
+
 			myParent.popMatrix();
 			myParent.popStyle();
 		}
@@ -1624,7 +1646,7 @@ public class XYscope {
 	 * @param rectModeVal
 	 *            CORNER or CENTER
 	 * @see <a href="https://processing.org/reference/rectMode_.html">Processing
-	 *      Reference -> rectMode()</a>
+	 *      Reference » rectMode()</a>
 	 */
 	public void rectMode(int rectModeVal) {
 		if (rectModeVal == 0) {
@@ -1638,7 +1660,7 @@ public class XYscope {
 	 * Draw rectangle, expects rect(x, y, w, h).
 	 * 
 	 * @see <a href="https://processing.org/reference/rect_.html">Processing
-	 *      Reference -> rect()</a>
+	 *      Reference » rect()</a>
 	 */
 	public void rect(float x1, float y1, float w1, float h1) {
 		if (rectM == 3) {
@@ -1655,8 +1677,8 @@ public class XYscope {
 		vertex(x1 + w1, y1 + h1);
 		vertex(x1, y1 + h1);
 		vertex(x1, y1);
-//		if (useZ)
-//			vertex(x1, y1);
+		//		if (useZ)
+		//			vertex(x1, y1);
 		endShape();
 	}
 
@@ -1664,7 +1686,7 @@ public class XYscope {
 	 * Draw ellipse, expects ellipse(x, y, w, h).
 	 * 
 	 * @see <a href="https://processing.org/reference/ellipse_.html">Processing
-	 *      Reference -> ellipse()</a>
+	 *      Reference » ellipse()</a>
 	 */
 	public void ellipse(float x1, float y1, float w1, float h1) {
 		vertexEllipse(x1, y1, w1, h1);
@@ -1699,14 +1721,14 @@ public class XYscope {
 	 * Draw point, expects point(x, y).
 	 * 
 	 * @see <a href="https://processing.org/reference/point_.html">Processing
-	 *      Reference -> point()</a>
+	 *      Reference » point()</a>
 	 */
 	public void point(float x1, float y1) {
 		beginShape();
 		vertex(x1, y1);
 		vertex(x1, y1);
-//		if (useZ)
-//			vertex(x1, y1);
+		//		if (useZ)
+		//			vertex(x1, y1);
 		endShape();
 	}
 
@@ -1714,14 +1736,14 @@ public class XYscope {
 	 * Draw point, expects point(x, y, z).
 	 * 
 	 * @see <a href="https://processing.org/reference/point_.html">Processing
-	 *      Reference -> point()</a>
+	 *      Reference » point()</a>
 	 */
 	public void point(float x1, float y1, float z1) {
 		beginShape();
 		vertex(x1, y1, z1);
 		vertex(x1, y1, z1);
-//		if (useZ)
-//			vertex(x1, y1, z1);
+		//		if (useZ)
+		//			vertex(x1, y1, z1);
 		endShape();
 	}
 
@@ -1729,29 +1751,29 @@ public class XYscope {
 	 * Draw line, expects line(x1, y1, x2, y2).
 	 * 
 	 * @see <a href="https://processing.org/reference/line_.html">Processing
-	 *      Reference -> line()</a>
+	 *      Reference » line()</a>
 	 */
 	public void line(float x1, float y1, float x2, float y2) {
 		beginShape();
 		vertex(x1, y1);
 		vertex(x2, y2);
-//		if (useZ)
-//			vertex(x2, y2);
+		//		if (useZ)
+		//			vertex(x2, y2);
 		endShape();
 	}
-	
+
 	/**
 	 * Draw line, expects line(x1, y1, z1, x2, y2, z2).
 	 * 
 	 * @see <a href="https://processing.org/reference/line_.html">Processing
-	 *      Reference -> line()</a>
+	 *      Reference » line()</a>
 	 */
 	public void line(float x1, float y1, float z1, float x2, float y2, float z2) {
 		beginShape();
 		vertex(x1, y1, z1);
 		vertex(x2, y2, z2);
-//		if (useZ)
-//			vertex(x2, y2, z2);
+		//		if (useZ)
+		//			vertex(x2, y2, z2);
 		endShape();
 	}
 
@@ -1760,7 +1782,7 @@ public class XYscope {
 	 * 
 	 * @see <a href=
 	 *      "https://processing.org/reference/beginShape_.html">Processing
-	 *      Reference -> beginShape()</a>
+	 *      Reference » beginShape()</a>
 	 */
 	public void beginShape() {
 		currentShape = new XYShape();
@@ -1768,24 +1790,31 @@ public class XYscope {
 	}
 
 	/**
-	 * Currently sent as normal vertex (to be fixed). Simply here for code ->
+	 * Currently sent as normal vertex (to be fixed). Simply here for code »
 	 * vectorcode compatibility.
+	 * 
+	 * @param x float
+	 * @param y float
 	 * 
 	 * @see <a href=
 	 *      "https://processing.org/reference/curveVertex_.html">Processing
-	 *      Reference -> curveVertex()</a>
+	 *      Reference » curveVertex()</a>
 	 */
 	public void curveVertex(float x, float y) {
 		vertex(new PVector(x, y, 0), false);
 	}
 
 	/**
-	 * Currently sent as normal vertex (to be fixed). Simply here for code ->
+	 * Currently sent as normal vertex (to be fixed). Simply here for code »
 	 * vectorcode compatibility.
+	 * 
+	 * @param x float
+	 * @param y float
+	 * @param z float
 	 * 
 	 * @see <a href=
 	 *      "https://processing.org/reference/curveVertex_.html">Processing
-	 *      Reference -> curveVertex()</a>
+	 *      Reference » curveVertex()</a>
 	 */
 	public void curveVertex(float x, float y, float z) {
 		vertex(new PVector(x, y, z), true);
@@ -1795,7 +1824,7 @@ public class XYscope {
 	 * Add vertex to complex shape. Expects vertex(x, y).
 	 * 
 	 * @see <a href="https://processing.org/reference/vertex_.html">Processing
-	 *      Reference -> vertex()</a>
+	 *      Reference » vertex()</a>
 	 */
 	public void vertex(float x, float y) {
 		vertex(new PVector(x, y, 0), false);
@@ -1805,7 +1834,7 @@ public class XYscope {
 	 * Add vertex to complex shape. Expects vertex(x, y, z).
 	 * 
 	 * @see <a href="https://processing.org/reference/vertex_.html">Processing
-	 *      Reference -> vertex()</a>
+	 *      Reference » vertex()</a>
 	 */
 	public void vertex(float x, float y, float z) {
 		vertex(new PVector(x, y, z), true);
@@ -1815,12 +1844,12 @@ public class XYscope {
 	 * Add vertex to complex shape. Expects vertex(PVector()).
 	 * 
 	 * @see <a href="https://processing.org/reference/vertex_.html">Processing
-	 *      Reference -> vertex()</a>
+	 *      Reference » vertex()</a>
 	 */
 	public void vertex(PVector p, boolean mode3D) {
 		vertexAdd(p, mode3D);
 	}
-	
+
 	private void vertexAdd(PVector p, boolean mode3D) {
 		float x, y;
 		if(mode3D){
@@ -1829,17 +1858,17 @@ public class XYscope {
 		}else{
 			x = norm(myParent.screenX(p.x, p.y), 0f, xyWidth + 0f);
 			y = norm(myParent.screenY(p.x, p.y), 0f, xyHeight + 0f);
-			
+
 		}
 		PVector normP = new PVector(x, y, 0);
 		if(useLimitPath){
 			float sx, sy;
 			if(mode3D){
-		        sx = myParent.screenX(p.x, p.y, p.z);
-		        sy = myParent.screenY(p.x, p.y, p.z);
+				sx = myParent.screenX(p.x, p.y, p.z);
+				sy = myParent.screenY(p.x, p.y, p.z);
 			}else{
-		        sx = myParent.screenX(p.x, p.y);
-		        sy = myParent.screenY(p.x, p.y);
+				sx = myParent.screenX(p.x, p.y);
+				sy = myParent.screenY(p.x, p.y);
 			}
 			if ((sx >= limitVal && sx <= xyWidth - limitVal) && (sy >= limitVal && sy <= xyHeight - limitVal))
 				currentShape.add(normP);
@@ -1852,7 +1881,7 @@ public class XYscope {
 	 * End complex shape.
 	 * 
 	 * @see <a href="https://processing.org/reference/endShape_.html">Processing
-	 *      Reference -> endShape()</a>
+	 *      Reference » endShape()</a>
 	 */
 	public void endShape() {
 		// not necessary in current setup. maybe useful later for z-axis
