@@ -1634,7 +1634,7 @@ public class XYscope {
 	 * Set detail (number of points) for drawing an ellipse.
 	 * 
 	 * @param newED
-	 *            int
+	 *            int for facets of ellipse
 	 */
 	public void ellipseDetail(int newED) {
 		ellipseDetail = newED;
@@ -1659,15 +1659,20 @@ public class XYscope {
 	/**
 	 * Draw rectangle, expects rect(x, y, w, h).
 	 * 
+	 * @param x float - x position of rectangle
+	 * @param y float - y position of rectangle
+	 * @param w float - width of rectangle
+	 * @param h float - height of rectangle
+	 * 
 	 * @see <a href="https://processing.org/reference/rect_.html">Processing
 	 *      Reference » rect()</a>
 	 */
-	public void rect(float x1, float y1, float w1, float h1) {
+	public void rect(float x, float y, float w, float h) {
 		if (rectM == 3) {
-			x1 -= w1 / 2;
-			y1 -= h1 / 2;
+			x -= w / 2;
+			y -= h / 2;
 		}
-		vertexRect(x1, y1, w1, h1);
+		vertexRect(x, y, w, h);
 	}
 
 	private void vertexRect(float x1, float y1, float w1, float h1) {
@@ -1685,11 +1690,16 @@ public class XYscope {
 	/**
 	 * Draw ellipse, expects ellipse(x, y, w, h).
 	 * 
+	 * @param x float - x position of ellipse
+	 * @param y float - y position of ellipse
+	 * @param w float - width of ellipse
+	 * @param h float - height of ellipse
+	 * 
 	 * @see <a href="https://processing.org/reference/ellipse_.html">Processing
 	 *      Reference » ellipse()</a>
 	 */
-	public void ellipse(float x1, float y1, float w1, float h1) {
-		vertexEllipse(x1, y1, w1, h1);
+	public void ellipse(float x, float y, float w, float h) {
+		vertexEllipse(x, y, w, h);
 	}
 
 	// vertexEllipse!
@@ -1720,35 +1730,43 @@ public class XYscope {
 	/**
 	 * Draw point, expects point(x, y).
 	 * 
+	 * @param x float - x position of point
+	 * @param y float - y position of point
+	 * 
 	 * @see <a href="https://processing.org/reference/point_.html">Processing
 	 *      Reference » point()</a>
 	 */
-	public void point(float x1, float y1) {
+	public void point(float x, float y) {
 		beginShape();
-		vertex(x1, y1);
-		vertex(x1, y1);
-		//		if (useZ)
-		//			vertex(x1, y1);
+		vertex(x, y);
+		vertex(x, y);
 		endShape();
 	}
 
 	/**
 	 * Draw point, expects point(x, y, z).
 	 * 
+	 * @param x float - x position of point
+	 * @param y float - y position of point
+	 * @param z float - z position of point
+	 * 
 	 * @see <a href="https://processing.org/reference/point_.html">Processing
 	 *      Reference » point()</a>
 	 */
-	public void point(float x1, float y1, float z1) {
+	public void point(float x, float y, float z) {
 		beginShape();
-		vertex(x1, y1, z1);
-		vertex(x1, y1, z1);
-		//		if (useZ)
-		//			vertex(x1, y1, z1);
+		vertex(x, y, z);
+		vertex(x, y, z);
 		endShape();
 	}
 
 	/**
 	 * Draw line, expects line(x1, y1, x2, y2).
+	 * 
+	 * @param x1 float - first x position of point
+	 * @param y1 float - first y position of point
+	 * @param x2 float - second x position of point
+	 * @param y2 float - second y position of point
 	 * 
 	 * @see <a href="https://processing.org/reference/line_.html">Processing
 	 *      Reference » line()</a>
@@ -1757,13 +1775,18 @@ public class XYscope {
 		beginShape();
 		vertex(x1, y1);
 		vertex(x2, y2);
-		//		if (useZ)
-		//			vertex(x2, y2);
 		endShape();
 	}
 
 	/**
 	 * Draw line, expects line(x1, y1, z1, x2, y2, z2).
+	 * 
+	 * @param x1 float - first x position of point
+	 * @param y1 float - first y position of point
+	 * @param z1 float - first z position of point
+	 * @param x2 float - second x position of point
+	 * @param y2 float - second y position of point
+	 * @param z2 float - second z position of point
 	 * 
 	 * @see <a href="https://processing.org/reference/line_.html">Processing
 	 *      Reference » line()</a>
@@ -1772,8 +1795,6 @@ public class XYscope {
 		beginShape();
 		vertex(x1, y1, z1);
 		vertex(x2, y2, z2);
-		//		if (useZ)
-		//			vertex(x2, y2, z2);
 		endShape();
 	}
 
@@ -1793,8 +1814,8 @@ public class XYscope {
 	 * Currently sent as normal vertex (to be fixed). Simply here for code »
 	 * vectorcode compatibility.
 	 * 
-	 * @param x float
-	 * @param y float
+	 * @param x float - x position of vertex point
+	 * @param y float - y position of vertex point
 	 * 
 	 * @see <a href=
 	 *      "https://processing.org/reference/curveVertex_.html">Processing
@@ -1808,9 +1829,9 @@ public class XYscope {
 	 * Currently sent as normal vertex (to be fixed). Simply here for code »
 	 * vectorcode compatibility.
 	 * 
-	 * @param x float
-	 * @param y float
-	 * @param z float
+	 * @param x float - x position of vertex point
+	 * @param y float - y position of vertex point
+	 * @param z float - z position of vertex point
 	 * 
 	 * @see <a href=
 	 *      "https://processing.org/reference/curveVertex_.html">Processing
@@ -1823,6 +1844,9 @@ public class XYscope {
 	/**
 	 * Add vertex to complex shape. Expects vertex(x, y).
 	 * 
+	 * @param x float - x position of vertex point
+	 * @param y float - y position of vertex point
+	 * 
 	 * @see <a href="https://processing.org/reference/vertex_.html">Processing
 	 *      Reference » vertex()</a>
 	 */
@@ -1833,20 +1857,34 @@ public class XYscope {
 	/**
 	 * Add vertex to complex shape. Expects vertex(x, y, z).
 	 * 
+	 * @param x float - x position of vertex point
+	 * @param y float - y position of vertex point
+	 * @param z float - z position of vertex point
+	 * 
 	 * @see <a href="https://processing.org/reference/vertex_.html">Processing
 	 *      Reference » vertex()</a>
 	 */
 	public void vertex(float x, float y, float z) {
 		vertex(new PVector(x, y, z), true);
 	}
-
+	
 	/**
 	 * Add vertex to complex shape. Expects vertex(PVector()).
+	 * 
+	 * @param p PVector – pass xy[z] position as PVector.
 	 * 
 	 * @see <a href="https://processing.org/reference/vertex_.html">Processing
 	 *      Reference » vertex()</a>
 	 */
-	public void vertex(PVector p, boolean mode3D) {
+	public void vertex(PVector p) {
+		if(p.z == 0f) {
+			vertexAdd(p, false);
+		}else {
+			vertexAdd(p, true);
+		}
+	}
+
+	private void vertex(PVector p, boolean mode3D) {
 		vertexAdd(p, mode3D);
 	}
 
@@ -1891,8 +1929,15 @@ public class XYscope {
 
 	private XYShape currentShape = null;
 
-	public class XYShapeList extends ArrayList<XYShape> {
-		public float getDistance() {
+	private class XYShapeList extends ArrayList<XYShape> {
+		
+		/**
+		 * Returns float of total distance of drawn shapes, XYShapeList.
+		 * 
+		 * @return float
+		 * 
+		 */
+		private float getDistance() {
 			float sum = 0;
 			for (XYShape shape : this) {
 				sum += shape.getDistance();
@@ -1900,7 +1945,13 @@ public class XYscope {
 			return sum;
 		}
 
-		public int totalSize() {
+		/**
+		 * Returns int of total number of points in drawn shapes, XYShapeList.
+		 * 
+		 * @return float
+		 * 
+		 */
+		private int totalSize() {
 			int tsCounter = 0;
 			for (XYShape shape : this) {
 				for (int i = 0; i < shape.size(); i++) {
@@ -1910,7 +1961,13 @@ public class XYscope {
 			return tsCounter;
 		}
 
-		public ArrayList<PVector> getPoints() {
+		/**
+		 * Returns ArrayList<PVector> of coordinates for all drawn shapes, XYShapeList.
+		 * 
+		 * @return float
+		 * 
+		 */
+		private ArrayList<PVector> getPoints() {
 			ArrayList<PVector> gp = new ArrayList<PVector>();
 			for (XYShape shape : this) {
 				for (int i = 0; i < shape.size(); i++) {
@@ -1921,8 +1978,9 @@ public class XYscope {
 		}
 	}
 
-	public class XYShape extends ArrayList<PVector> {
-		public float getDistance() {
+	private class XYShape extends ArrayList<PVector> {
+
+		private float getDistance() {
 			float sum = 0;
 			for (int i = 0; i < size() - 1; i++) {
 				sum += get(i).dist(get(i + 1));

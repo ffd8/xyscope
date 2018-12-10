@@ -5,3 +5,4 @@ web
 .DS_Store
 .project
 .classpath
+/bin/
