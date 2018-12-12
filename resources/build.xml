@@ -175,7 +175,7 @@ ${line}
   			<fileset dir="${project.src}"/>
 	  	</copy>
 	  	<copy todir="${project.tmp}/${project.name}/${folder}">
-  			<fileset dir="${project.lib}" excludes="README" />
+  			<fileset dir="${project.lib}" excludes="README core.jar jsminim.jar minim.jar" />
 	  	</copy>
 	</target>
 	

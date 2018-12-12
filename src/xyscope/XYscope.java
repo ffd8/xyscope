@@ -107,7 +107,7 @@ public class XYscope {
 	Minim minimR, minimBG;
 
 	/**
-	 * minim Oscil, for customizing RGB oscillators.
+	 * minim Oscil, for customizing Laser RGB oscillators.
 	 */
 	public Oscil waveR, waveG, waveB; 
 
@@ -538,7 +538,7 @@ public class XYscope {
 	}
 
 	/**
-	 * Activate use of RGB laser, by assigning 3 additional (2x stereo pairs) audio channels for controlling the RGB modulation.
+	 * Activate use of Laser's RGB by assigning 3 additional (2x stereo pairs) audio channels for controlling the RGB modulation.
 	 * 
 	 * @param inR
 	 *            String for name of audio channel for Red
@@ -580,7 +580,7 @@ public class XYscope {
 	}
 
 	/**
-	 * Returns current frequency of low-pass-filter (LPF) for laser.
+	 * Returns current frequency of Laser's low-pass-filter (LPF).
 	 * 
 	 * @return float
 	 */
@@ -589,7 +589,7 @@ public class XYscope {
 	}
 
 	/**
-	 * Set new frequency for low-pass-filter (LPF) of laser as float. Be careful to stay within range that's safe for your Galvos.
+	 * Set new frequency for Laser's low-pass-filter (LPF) as float. Be careful to stay within range that's safe for your Galvos.
 	 * 
 	 * @param newLaserLPFVal
 	 *            float between 0.1 - 20000.0
@@ -1929,7 +1929,7 @@ public class XYscope {
 
 	private XYShape currentShape = null;
 
-	private class XYShapeList extends ArrayList<XYShape> {
+	public class XYShapeList extends ArrayList<XYShape> {
 		
 		/**
 		 * Returns float of total distance of drawn shapes, XYShapeList.
@@ -1937,7 +1937,7 @@ public class XYscope {
 		 * @return float
 		 * 
 		 */
-		private float getDistance() {
+		public float getDistance() {
 			float sum = 0;
 			for (XYShape shape : this) {
 				sum += shape.getDistance();
@@ -1951,7 +1951,7 @@ public class XYscope {
 		 * @return float
 		 * 
 		 */
-		private int totalSize() {
+		public int totalSize() {
 			int tsCounter = 0;
 			for (XYShape shape : this) {
 				for (int i = 0; i < shape.size(); i++) {
@@ -1967,7 +1967,7 @@ public class XYscope {
 		 * @return float
 		 * 
 		 */
-		private ArrayList<PVector> getPoints() {
+		public ArrayList<PVector> getPoints() {
 			ArrayList<PVector> gp = new ArrayList<PVector>();
 			for (XYShape shape : this) {
 				for (int i = 0; i < shape.size(); i++) {
@@ -1978,9 +1978,9 @@ public class XYscope {
 		}
 	}
 
-	private class XYShape extends ArrayList<PVector> {
+	public class XYShape extends ArrayList<PVector> {
 
-		private float getDistance() {
+		public float getDistance() {
 			float sum = 0;
 			for (int i = 0; i < size() - 1; i++) {
 				sum += get(i).dist(get(i + 1));
