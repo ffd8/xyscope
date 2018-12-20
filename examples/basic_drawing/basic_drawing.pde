@@ -1,7 +1,7 @@
 /* 
  basic_drawing
  You can draw by simply adding points directly or converted
- cc teddavis.org 2017
+ cc teddavis.org 2017/18
  */
 
 // import and create instance of XYscope
@@ -31,7 +31,7 @@ void draw() {
 
 void mouseDragged() {
   // add point based on width/height
-  xy.point(mouseX, mouseY);
+  xy.line(mouseX, mouseY, pmouseX, pmouseY);
 }
 
 void keyPressed() {

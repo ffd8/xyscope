@@ -20,9 +20,8 @@ void setup() {
   xy = new XYscope(this);
   xy.getMixerInfo();
   
-  // set soundcard by String or ID (if not found, will default system out)
+  // set soundcard by String (if not found, will default system out)
   // xy = new XYscope(this, "MOTU828_12");
-  // xy = new XYscope(this, 4);
 }
 
 void draw() {

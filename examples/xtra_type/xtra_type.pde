@@ -48,7 +48,7 @@ void draw() {
   pointPaths = grp.getPointsInPaths();
 
   pushMatrix();
-  translate(width/2, height*.5); 
+  translate(width/2, height/2); 
   if (pointPaths != null) { // only draw if we have points 
     for (int i = 0; i < pointPaths.length; i++) { 
       xy.beginShape(); 

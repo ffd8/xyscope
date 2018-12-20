@@ -1,5 +1,8 @@
 package xyscope;
-// add comment about fix w/ major credits to hansi
+/*
+ * Special update to Minim Waveform class by Hansi Raber (Sep 2018),
+ * fixing an array out of bounds bug when changing waveform quickly.
+ * */
 
 import java.util.Random;
 

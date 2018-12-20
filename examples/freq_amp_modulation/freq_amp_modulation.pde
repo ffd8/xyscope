@@ -27,14 +27,14 @@ void draw() {
   xy.clearWaves();
 
   // modulate amp with mouseX left - right
-  xy.amp(norm(mouseX, 0, width));
+  xy.amp(norm(mouseY, height, 0));
 
   // modulate just one value for fun scaling
   // xy.ampX(norm(mouseX, 0, width));
   // xy.ampY(norm(mouseX, 0, width));
 
   // modulate freq with mouseY up - down
-  xy.freq(map(mouseY, 0, height, 0, 440));
+  xy.freq(map(mouseX, 0, width, 0, 440));
 
   // draw house
   drawHouse();

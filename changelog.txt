@@ -4,7 +4,7 @@
 
 
 ////////////////////////////////////////////////////////////
-XYScope 2.2.0 (REV 4) - 07.12.2018
+XYScope 2.2.0 (REV 4) - 20.12.2018
 
 + NEW & IMPROVED buildWaves() technique (added -2, to those who like previous)
 + Fixed Minim WaveTable bug that caused crash since REV 2 (thanks Hansi Raber!)
@@ -18,6 +18,7 @@ XYScope 2.2.0 (REV 4) - 07.12.2018
 + Examples: added xtra_obj + xtra_video + xtra_laser
 
 * minor vertex() code changes
+* minor changes to examples
 
 
 ////////////////////////////////////////////////////////////

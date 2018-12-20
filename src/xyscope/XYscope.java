@@ -15,8 +15,8 @@ import ddf.minim.ugens.*;
 import javax.sound.sampled.*;
 
 /**
- * Render graphics on a vector display by converting them to audio (oscilloscope
- * X-Y mode, laser).
+ * Render vector graphics on a vector display (oscilloscope
+ * X-Y mode, laser) by converting them to audio .
  *
  */
 
