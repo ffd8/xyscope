@@ -123,6 +123,7 @@ public class XYscope {
 	private XYShape RGBshape = new XYShape();
 	PVector lsFreq = new PVector(initFreq, initFreq, initFreq);
 	PVector lsWB = new PVector(250, 220, 90);
+	PVector lsMin = new PVector(0, 0, 0);
 	PVector lsDash = new PVector(1, 1, 1);
 	MoogFilter moog;
 	float laserLPFVal = 10000.0f;
@@ -619,6 +620,23 @@ public class XYscope {
 	}
 
 	/**
+	 * Returns current values for setting minimum values from RGB mixture in laser.
+	 * 
+	 * @return PVector
+	 */
+	public PVector strokeMin(){
+		return lsMin;
+	}
+
+	public void strokeMin(float minR, float minG, float minB){
+		strokeMin(new PVector(minR, minG, minB));
+	}
+
+	public void strokeMin(PVector minPV){
+		lsMin = new PVector(minPV.x, minPV.y, minPV.z);
+	}
+	
+	/**
 	 * Returns current values for setting white balance from RGB mixture in laser.
 	 * 
 	 * @return PVector
@@ -656,9 +674,16 @@ public class XYscope {
 	}
 
 	public void stroke(PVector rgb){
-		float mr = map(rgb.x, 0f, 255f, 0f, 1f);
-		float mg = map(rgb.y, 0f, 255f, 0f, 1f);
-		float mb = map(rgb.z, 0f, 255f, 0f, 1f);
+		float mr = 0f;
+		float mg = 0f;
+		float mb = 0f;
+		if(rgb.x > 0f)
+			mr = map(rgb.x, 0f, 255f, (lsMin.x/255f), 1f);
+		if(rgb.y > 0f)
+			mg = map(rgb.y, 0f, 255f, (lsMin.y/255f), 1f);
+		if(rgb.z > 0f)
+			mb = map(rgb.z, 0f, 255f, (lsMin.z/255f), 1f);
+		
 		if(rgb.x == 255f && rgb.y == 255f && rgb.z == 255f){
 			mr = lsWB.x / 255f;
 			mg = lsWB.y / 255f;
@@ -1069,9 +1094,9 @@ public class XYscope {
 					}
 					if(checkSize){
 						if(RGBshape.size() > 0){
-							buildColorWave(tableR, floor(lsDash.x));
-							buildColorWave(tableG, floor(lsDash.y));
-							buildColorWave(tableB, floor(lsDash.z));
+							buildColorWave(tableR, "x", floor(lsDash.x));
+							buildColorWave(tableG, "y", floor(lsDash.y));
+							buildColorWave(tableB, "z", floor(lsDash.z));
 						}else{
 							float[] tfr = {lsWB.x/255f};
 							float[] tfg = {lsWB.y/255f};
@@ -1186,18 +1211,28 @@ public class XYscope {
 		}
 	}
 
-	private void buildColorWave(XYWavetable tableTemp, int dashTemp){
+	private void buildColorWave(XYWavetable tableTemp, String RGBval, int dashTemp){
 		XYShape shapeTemp = new XYShape();						
 		for (int i = 0; i < RGBshape.size()*dashTemp; i++) {
-			PVector tc = RGBshape.get(floor(map(i, 0, RGBshape.size()*dashTemp, 0, RGBshape.size())));
-			if(i%2==0 && dashTemp > 1)
+			int RGBshapeIndex = floor(map(i, 0, RGBshape.size()*dashTemp, 0, RGBshape.size()));
+			PVector tc = RGBshape.get(RGBshapeIndex);
+			if(i%2==0 && dashTemp > 1) {
 				tc = new PVector(-1, -1, -1);
+			}
 			shapeTemp.add(tc);
 		}
+		println(shapeTemp.size());
 		float[] tfr = new float[shapeTemp.size()];
 		for (int i = 0; i < shapeTemp.size(); i++) {
 			PVector tc = shapeTemp.get(i);
-			tfr[i] = tc.x;
+			if(RGBval == "x") {
+				tfr[i] = tc.x;
+			}else if(RGBval == "y") {
+				tfr[i] = tc.y;
+			}else if(RGBval == "z") {
+				tfr[i] = tc.z;
+			}
+			
 		}
 		tableTemp.setWaveform(tfr);
 	}
