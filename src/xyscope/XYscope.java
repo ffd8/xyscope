@@ -620,7 +620,7 @@ public class XYscope {
 	}
 
 	/**
-	 * Returns current values for setting minimum values from RGB mixture in laser.
+	 * Returns current minimum values set for RGB laser.
 	 * 
 	 * @return PVector
 	 */
@@ -628,16 +628,32 @@ public class XYscope {
 		return lsMin;
 	}
 
+	/**
+	 * Set new minimum values for RGB laser, as 3 floats.
+	 * 
+	 * @param minR
+	 *            value between 0.0 - 255.0
+	 * @param minG
+	 *            value between 0.0 - 255.0
+	 * @param minB
+	 *            value between 0.0 - 255.0
+	 */
 	public void strokeMin(float minR, float minG, float minB){
 		strokeMin(new PVector(minR, minG, minB));
 	}
 
+	/**
+	 * Set new minimum values for RGB laser, as PVector.
+	 * 
+	 * @param minPV
+	 *            PVector with 3 values between 0.0 - 255.0
+	 */
 	public void strokeMin(PVector minPV){
 		lsMin = new PVector(minPV.x, minPV.y, minPV.z);
 	}
 	
 	/**
-	 * Returns current values for setting white balance from RGB mixture in laser.
+	 * Returns current white balance (mixture for white) settings for RGB laser.
 	 * 
 	 * @return PVector
 	 */
@@ -645,34 +661,93 @@ public class XYscope {
 		return lsWB;
 	}
 
+	/**
+	 * Set white balance (mixture for white) for RGB laser, as 3 floats.
+	 * 
+	 * @param wbR
+	 *            value between 0.0 - 255.0
+	 * @param wbG
+	 *            value between 0.0 - 255.0
+	 * @param wbB
+	 *            value between 0.0 - 255.0
+	 */
 	public void strokeWB(float wbR, float wbG, float wbB){
 		strokeWB(new PVector(wbR, wbG, wbB));
 	}
 
+	/**
+	 * Set white balance (mixture for white) for RGB laser, as PVector.
+	 * 
+	 * @param wbPV
+	 *            PVector with 3 values between 0.0 - 255.0
+	 */
 	public void strokeWB(PVector wbPV){
 		lsWB = new PVector(wbPV.x, wbPV.y, wbPV.z);
 	}
 
+	/**
+	 * Returns current dashes used for RGB waves of laser.
+	 * 
+	 * @return PVector
+	 */
 	public PVector strokeDash(){
 		return lsDash;
 	}
 
+	/**
+	 * Set same number of dashes for RGB laser.
+	 * 
+	 * @param newDash
+	 *            int
+	 */
 	public void strokeDash(int newDash){
 		strokeDash(new PVector(newDash, newDash, newDash));
 	}
 
+	/**
+	 * Set seperate number of dashes per color for RGB laser.
+	 * 
+	 * @param newDashR
+	 *            int
+	 * @param newDashG
+	 *            int
+	 * @param newDashB
+	 *            int
+	 */
 	public void strokeDash(int newDashR, int newDashG, int newDashB){
 		strokeDash(new PVector(newDashR, newDashG, newDashB));
 	}
 
+	/**
+	 * Set dashes for RGB laser, as PVector.
+	 * 
+	 * @param newDash
+	 *            PVector with 3 values
+	 */
 	public void strokeDash(PVector newDash){
 		lsDash = new PVector(newDash.x, newDash.y, newDash.z);
 	}
 
+	/**
+	 * Set stroke for RGB laser, as 3 floats.
+	 * 
+	 * @param r
+	 *            float from 0.0 – 255.0
+	 * @param g
+	 *            float from 0.0 – 255.0
+	 * @param b
+	 *            float from 0.0 – 255.0
+	 */
 	public void stroke(float r, float g, float b){
 		stroke(new PVector(r, g, b));
 	}
 
+	/**
+	 * Set stroke for RGB laser, as PVector.
+	 * 
+	 * @param newDash
+	 *            PVector with 3 values, from 0.0 – 255.0
+	 */
 	public void stroke(PVector rgb){
 		float mr = 0f;
 		float mg = 0f;
@@ -692,20 +767,47 @@ public class XYscope {
 		RGBshape.add(new PVector(mr, mg, mb));
 	}
 
+	/**
+	 * Get current frequency for R, G, B oscillators for laser as a PVector.
+	 * 
+	 * @return PVector
+	 */
 	public PVector strokeFreq() {
 		return lsFreq;
 	}
 
+	/**
+	 * Set new frequency for all RGB oscillators of laser together as single float.
+	 * 
+	 * @param newFreq
+	 *            float
+	 */
 	public void strokeFreq(float newFreq) {
 		lsFreq = new PVector(newFreq, newFreq, newFreq);
 		strokeFreq(lsFreq);
 	}
 
+	/**
+	 * Set new frequency for all R + G + B oscillators of laser.
+	 * 
+	 * @param newFreqR
+	 *            float
+	 * @param newFreqG
+	 *            float
+	 * @param newFreqB
+	 *            float
+	 */
 	public void strokeFreq(float newFreqR, float newFreqG, float newFreqB) {
 		lsFreq = new PVector(newFreqR, newFreqG, newFreqB);
 		strokeFreq(lsFreq);
 	}
 
+	/**
+	 * Set new frequency for each RGB oscillator of laser separately using a PVector.
+	 * 
+	 * @param newFreq
+	 *            PVector
+	 */
 	public void strokeFreq(PVector newFreq) {
 		lsFreq = newFreq;
 		waveR.setFrequency(lsFreq.x);
@@ -842,7 +944,7 @@ public class XYscope {
 	}
 
 	/**
-	 * Set new frequency for all X + Y oscillators.
+	 * Set new frequency for all X + Y + Z oscillators.
 	 * 
 	 * @param newFreqX
 	 *            float
