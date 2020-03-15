@@ -1323,7 +1323,7 @@ public class XYscope {
 			}
 			shapeTemp.add(tc);
 		}
-		println(shapeTemp.size());
+		//println(shapeTemp.size());
 		float[] tfr = new float[shapeTemp.size()];
 		for (int i = 0; i < shapeTemp.size(); i++) {
 			PVector tc = shapeTemp.get(i);
