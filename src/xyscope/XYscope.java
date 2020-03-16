@@ -74,7 +74,11 @@ public class XYscope {
 	float[] shapePreY = new float[waveSizeVal];
 	float[] shapePreX = new float[waveSizeVal];
 	float[] shapePreZ = new float[waveSizeVal];
-	boolean debugWave = false;
+	
+	/**
+	 * Optionally activate debugging (mouseX shows waveform on drawn form)
+	 */
+	public boolean debugWave = false;
 	int debugSize = 10;
 	boolean busy = false;
 
@@ -94,7 +98,21 @@ public class XYscope {
 	float zaxisMax = 1f;
 	float zaxisMin = -1f;
 	int zoffset = 1;
+	
+	// TYPE VARS
+	String hershey_font[];
+	int hheight = 21;
+	float hfactor = 1;
+	int textAlignX = 37;
+	int textAlignY = 101;
 
+	
+	/**
+	 * List of built-in Hershey Fonts available
+	 */
+	public String[] fonts = {"astrology", "cursive", "cyrilc_1", "cyrillic", "futural", "futuram", "gothgbt", "gothgrt", "gothiceng", "gothicger", "gothicita", "gothitt", "greek", "greekc", "greeks", "japanese", "markers", "mathlow", "mathupp", "meteorology", "music", "rowmand", "rowmans", "rowmant", "scriptc", "scripts", "symbolic", "timesg", "timesi", "timesib", "timesr", "timesrb"};
+	
+	// VECTREX VARS
 	boolean useVectrex = false;
 	float vectrexAmp = .82f;
 	float vectrexAmpInit = .6f;
@@ -217,6 +235,11 @@ public class XYscope {
 		System.out.println("XYscope 2.2.0 by Ted Davis http://teddavis.org");
 		xyWidth = myParent.width;
 		xyHeight = myParent.height;
+		initText();
+	}
+	
+	private void initText() {
+		textFont("meteorology");
 	}
 
 	/**
@@ -1124,6 +1147,7 @@ public class XYscope {
 					for (int i = 0; i < shape.size(); i++) {
 						if(i < tfx.length){
 							PVector tc = shape.get(i);
+
 							tfx[i] = map(tc.x, 0f, 1f, -1f, 1f);
 							tfy[i] = map(tc.y, 0f, 1f, 1f, -1f);
 							tfz[i] = zaxisMax;
@@ -1323,7 +1347,7 @@ public class XYscope {
 			}
 			shapeTemp.add(tc);
 		}
-		//println(shapeTemp.size());
+
 		float[] tfr = new float[shapeTemp.size()];
 		for (int i = 0; i < shapeTemp.size(); i++) {
 			PVector tc = shapeTemp.get(i);
@@ -1792,6 +1816,42 @@ public class XYscope {
 			rectM = 3;
 		}
 	}
+	
+	/**
+	 * Draw square, expects square(x, y, extent).
+	 * 
+	 * @param x float - x position of square
+	 * @param y float - y position of square
+	 * @param extent float - width + height of square
+	 * 
+	 * @see <a href="https://processing.org/reference/square_.html">Processing
+	 *      Reference » rect()</a>
+	 */
+	public void square(float x, float y, float e) {
+		if (rectM == 3) {
+			x -= e / 2;
+			y -= e / 2;
+		}
+		vertexRect(x, y, e, e);
+	}
+	
+	/**
+	 * Draw rectangle (square), expects rect(x, y, w).
+	 * 
+	 * @param x float - x position of rectangle
+	 * @param y float - y position of rectangle
+	 * @param w float - width of rectangle
+	 * 
+	 * @see <a href="https://processing.org/reference/rect_.html">Processing
+	 *      Reference » rect()</a>
+	 */
+	public void rect(float x, float y, float w) {
+		if (rectM == 3) {
+			x -= w / 2;
+			y -= w / 2;
+		}
+		vertexRect(x, y, w, w);
+	}
 
 	/**
 	 * Draw rectangle, expects rect(x, y, w, h).
@@ -1822,6 +1882,34 @@ public class XYscope {
 		//		if (useZ)
 		//			vertex(x1, y1);
 		endShape();
+	}
+	
+	/**
+	 * Draw circle (ellipse), expects circle(x, y, extent).
+	 * 
+	 * @param x float - x position of circle
+	 * @param y float - y position of circle
+	 * @param extent float - width + height of circle
+	 * 
+	 * @see <a href="https://processing.org/reference/circle_.html">Processing
+	 *      Reference » ellipse()</a>
+	 */
+	public void circle(float x, float y, float e) {
+		vertexEllipse(x, y, e, e);
+	}
+	
+	/**
+	 * Draw ellipse (circle), expects ellipse(x, y, w).
+	 * 
+	 * @param x float - x position of ellipse
+	 * @param y float - y position of ellipse
+	 * @param d float - diameter of ellipse
+	 * 
+	 * @see <a href="https://processing.org/reference/ellipse_.html">Processing
+	 *      Reference » ellipse()</a>
+	 */
+	public void ellipse(float x, float y, float d) {
+		vertexEllipse(x, y, d, d);
 	}
 
 	/**
@@ -2062,6 +2150,268 @@ public class XYscope {
 		// not necessary in current setup. maybe useful later for z-axis
 		if(currentShape.size() > 1)
 			currentShape.get(currentShape.size()-1).z = 1f;
+	}
+	
+	private boolean contains(String[] arr, String val) {
+		for(int i=0; i<arr.length; i++) {
+			if(arr[i].equals(val)) { 
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * Set Hershey Font for built-in text rendering. Use println(xy.fonts) for complete list available.
+	 * 
+	 * @param fontName
+	 *            String of Hershey Font name
+	 */
+	public void textFont(String fontName) {
+		if(contains(fonts, fontName)) {
+			String [] hershey_font_org;
+			hershey_font_org = myParent.loadStrings("hershey_fonts/" + fontName + ".jhf");
+
+			String hershey_font_string = "";
+
+			for (int i=0; i<hershey_font_org.length; i++) {
+				String line = hershey_font_org[i].trim();
+				if (line.charAt(0) >= 48 && line.charAt(0) <= 57)
+					hershey_font_string += line + "\n";
+				else {
+					hershey_font_string = hershey_font_string.substring(0, hershey_font_string.length()-1) + line + "\n";
+				}
+			}
+			hershey_font = hershey_font_string.split("\n");
+		}
+	}
+	
+	/**
+	 * Set size for built-in Hershey text rendering.
+	 * 
+	 * @param fontSize
+	 *            Float - size of text
+	 */
+	public void textSize(float fontSize){
+		hfactor = fontSize/hheight;
+	}
+		
+	/**
+	 * Set horizontal alignment of built in Hershey text rending. LEFT (default), CENTER or RIGHT.
+	 * 
+	 * @param taX
+	 *            LEFT, CENTER, RIGHT
+	 */
+	public void textAlign(int taX) {
+		textAlign(taX, textAlignY);
+	}
+	
+	/**
+	 * Set horizontal and vertical alignment of built in Hershey text rending. Horizontal: LEFT (default), CENTER or RIGHT. Vertical: TOP, CENTER (default), BOTTOM.
+	 * 
+	 * @param taX
+	 *            LEFT, CENTER, RIGHT
+	 * @param taY
+	 *            TOP, CENTER, BOTTOM
+	 */
+	public void textAlign(int taX, int taY) {
+		if(taX == 37 || taX == 3 || taX == 39) {
+			textAlignX = taX;
+		}
+		if(taY == 101 || taY == 3 || taY == 102) {
+			textAlignY = taY;
+		}
+	}
+	
+	/**
+	 * Render text using built in Hershey Fonts. 
+	 * 
+	 * @param s
+	 *            String - text to display
+	 * @param x
+	 *            float - horizontal position of text
+	 * @param y
+	 *            float - vertical position of text
+	 */
+	public void text(String s, float x, float y) {
+//		PVector ta = textOffset(s, x, y);
+		
+		x += 5 * hfactor;
+		
+		switch(textAlignX) {
+		case 3:
+			x -= textWidth(s) / 2;
+			break;
+		case 39:
+			x -= textWidth(s);
+			break;
+		}
+		
+		switch(textAlignY) {
+		case 101:
+			y += hfactor * 12;
+			break;
+		
+		case 102:
+			y -= hfactor * 12;
+			break;
+		}
+		
+		myParent.pushMatrix();		
+		myParent.translate(x, y);
+		
+		for (int i=0; i<s.length (); i++){
+			draw_character(s.charAt(i)); // custom drawChar for XYscope
+		}
+		myParent.popMatrix();
+	}
+	
+	/**
+	 * Calculate width of provided character of text, for built-in Hershey Font . 
+	 * 
+	 * @param s
+	 *            char - character to measure width of
+	 *            
+	 * @return float
+	 */	
+	public float textWidth(int c) {
+		String h = hershey_font[c - 32 ];
+
+		int start_col = h.indexOf(" ");
+
+		int h_left = hershey2coord(h.charAt(start_col+3));
+		int h_right = hershey2coord(h.charAt(start_col+4));
+		float h_width = h_right - h_left * hfactor;
+
+		return h_width + 5 * hfactor;
+	}
+	
+	/**
+	 * Calculate width of provided string of text, for built-in Hershey Font . 
+	 * 
+	 * @param s
+	 *            String - text to measure width of
+	 *            
+	 * @return float
+	 */	
+	public float textWidth(String s) {
+		float offx = 0;
+		for (int k=0; k<s.length (); k++){
+			int c = s.charAt(k);
+			String h = hershey_font[c - 32 ];
+
+			int start_col = h.indexOf(" ");
+
+			int h_left = hershey2coord(h.charAt(start_col+3));
+			int h_right = hershey2coord(h.charAt(start_col+4));
+			float h_width = h_right - h_left * hfactor;
+			offx += h_width + 5 * hfactor;
+		}
+		return offx;
+	}
+	
+	/**
+	 * Process and return 2D-array (points in paths) of PVector's from provided text, x, y coordinates using built in Hershey Fonts. 
+	 * 
+	 * @param s
+	 *            String - text to display
+	 * @param x
+	 *            float - horizontal position of text
+	 * @param y
+	 *            float - vertical position of text
+	 *            
+	 * @return 2D-Array of <PVector>
+	 */
+	public PVector[][] textPaths(String s, float x, float y) {
+		ArrayList<ArrayList<PVector>> coords = new ArrayList(s.length());
+		
+		x += 5 * hfactor;
+		
+		switch(textAlignX) {
+		case 3:
+			x -= textWidth(s) / 2;
+			break;
+		case 39:
+			x -= textWidth(s);
+			break;
+		}
+		
+		switch(textAlignY) {
+		case 101:
+			y += hfactor * 12;
+			break;
+		
+		case 102:
+			y -= hfactor * 12;
+			break;
+		}
+		
+		float offx = x;
+		float offy = y;
+		for (int k=0; k<s.length (); k++){
+			int c = s.charAt(k);
+			String h = hershey_font[c - 32 ];
+
+			int start_col = h.indexOf(" ");
+
+			int h_left = hershey2coord(h.charAt(start_col+3));
+			int h_right = hershey2coord(h.charAt(start_col+4));
+			float h_width = h_right - h_left * hfactor;
+
+			String[] h_vertices = h.substring(start_col+5, h.length()).replaceAll(" R", " ").split(" ");
+
+			for (int i=0; i<h_vertices.length; i++) {
+				ArrayList<PVector> coord = new ArrayList(h_vertices[i].length());
+				for (int j=2; j<h_vertices[i].length (); j+=2) {
+					float hx0 = hershey2coord(h_vertices[i].charAt(j-2)) * hfactor;
+					float hy0 = hershey2coord(h_vertices[i].charAt(j-1)) * hfactor;
+					coord.add(new PVector(offx + hx0, offy+hy0));
+					float hx1 = hershey2coord(h_vertices[i].charAt(j)) * hfactor;
+					float hy1 = hershey2coord(h_vertices[i].charAt(j+1)) * hfactor;
+					coord.add(new PVector(offx+hx1, offy+hy1));
+				}
+				coords.add(coord);
+			}
+			offx += h_width + 5 * hfactor;
+		}
+
+		PVector[][] coordsArray = new PVector[coords.size()][];
+		for(int i=0; i < coords.size(); i++) {
+			coordsArray[i] = new PVector[coords.get(i).size()];
+			for(int j=0; j < coords.get(i).size(); j++) {
+				coordsArray[i][j] = coords.get(i).get(j);
+			}
+		}
+
+		return coordsArray;
+	}
+
+	private void draw_character(int c) {
+		String h = hershey_font[c - 32 ];
+
+		int start_col = h.indexOf(" ");
+
+		int h_left = hershey2coord(h.charAt(start_col+3));
+		int h_right = hershey2coord(h.charAt(start_col+4));
+		float h_width = h_right - h_left * hfactor;
+		String[] h_vertices = h.substring(start_col+5, h.length()).replaceAll(" R", " ").split(" ");
+		for (int i=0; i<h_vertices.length; i++) {
+			beginShape();
+			for (int j=2; j<h_vertices[i].length (); j+=2) {
+				float hx0 = hershey2coord(h_vertices[i].charAt(j-2)) * hfactor;
+				float hy0 = hershey2coord(h_vertices[i].charAt(j-1)) * hfactor;
+				vertex(hx0, hy0);
+				float hx1 = hershey2coord(h_vertices[i].charAt(j)) * hfactor;
+				float hy1 = hershey2coord(h_vertices[i].charAt(j+1)) * hfactor;
+				vertex(hx1, hy1);
+			}
+			endShape();
+		}
+		myParent.translate(h_width + 5 * hfactor, 0);
+	}
+
+	private int hershey2coord(char c) {
+		return c - 'R';
 	}
 
 	private XYShape currentShape = null;
