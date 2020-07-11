@@ -66,16 +66,19 @@ void draw() {
     println("threshold: "+threshold +" / thresholdDist: "+ thresholdDist);
   }
 
-  // convert video to high contrast threshold
-  video.loadPixels();
-  for (int i=0; i<p.width*p.height; i++) {
-    if (brightness(video.pixels[i]) > threshold && brightness(video.pixels[i]) < threshold+thresholdDist) {
-      p.pixels[i]  = color(0); // White
-    } else {
-      p.pixels[i]  = color(255); // Black
+  if (video.available() == true) {
+    video.read();
+    // convert video to high contrast threshold
+    video.loadPixels();
+    for (int i=0; i<p.width*p.height; i++) {
+      if (brightness(video.pixels[i]) > threshold && brightness(video.pixels[i]) < threshold+thresholdDist) {
+        p.pixels[i]  = color(0); // White
+      } else {
+        p.pixels[i]  = color(255); // Black
+      }
     }
+    p.updatePixels();
   }
-  p.updatePixels();
 
   // process threshold to single line
   opencv.loadImage(p);
