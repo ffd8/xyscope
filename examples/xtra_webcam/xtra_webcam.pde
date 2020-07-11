@@ -54,20 +54,20 @@ void setup() {
 void draw() {
   background(0);
 
+  // clear waves like refreshing background
+  xy.clearWaves();
+
+  // adjust threshold of image for selective lines
+  if (mousePressed) {
+    threshold = floor(map(mouseX, 0, width, 0, 255));
+    thresholdDist = map(mouseY, 0, height, 0, 255-threshold);
+
+    // replace variable defaults at top if you find better ones
+    println("threshold: "+threshold +" / thresholdDist: "+ thresholdDist);
+  }
+
   if (video.available() == true) {
     video.read();
-    // clear waves like refreshing background
-    xy.clearWaves();
-
-    // adjust threshold of image for selective lines
-    if (mousePressed) {
-      threshold = floor(map(mouseX, 0, width, 0, 255));
-      thresholdDist = map(mouseY, 0, height, 0, 255-threshold);
-
-      // replace variable defaults at top if you find better ones
-      println("threshold: "+threshold +" / thresholdDist: "+ thresholdDist);
-    }
-
     // convert video to high contrast threshold
     video.loadPixels();
     for (int i=0; i<p.width*p.height; i++) {
@@ -78,30 +78,31 @@ void draw() {
       }
     }
     p.updatePixels();
+  }
 
-    // process threshold to single line
-    opencv.loadImage(p);
-    opencv.flip(OpenCV.HORIZONTAL);
-    opencv.dilate();
-    contours = opencv.findContours(true, false);
+  // process threshold to single line
+  opencv.loadImage(p);
+  opencv.flip(OpenCV.HORIZONTAL);
+  opencv.dilate();
+  contours = opencv.findContours(true, false);
 
-    // sort group of lines for effeciant drawing
-    Collections.sort(contours, new MyComparator());
+  // sort group of lines for effeciant drawing
+  Collections.sort(contours, new MyComparator());
 
-    // draw shapes on scope
-    for (Contour contour : contours) {
-      if (contours.size() > 0) {
-        contour.setPolygonApproximationFactor(1);
-        if (contour.numPoints() > cutoff) {        
-          xy.beginShape();
-          for (PVector point : contour.getPolygonApproximation().getPoints()) {
-            xy.vertex(point.x, point.y);
-          }
-          xy.endShape();
+  // draw shapes on scope
+  for (Contour contour : contours) {
+    if (contours.size() > 0) {
+      contour.setPolygonApproximationFactor(1);
+      if (contour.numPoints() > cutoff) {        
+        xy.beginShape();
+        for (PVector point : contour.getPolygonApproximation().getPoints()) {
+          xy.vertex(point.x, point.y);
         }
+        xy.endShape();
       }
     }
   }
+
   // build audio from shapes
   xy.buildWaves();
 
