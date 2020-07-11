@@ -54,6 +54,8 @@ void setup() {
 void draw() {
   background(0);
 
+  video.read();
+
   // clear waves like refreshing background
   xy.clearWaves();
 
@@ -68,6 +70,9 @@ void draw() {
 
   // convert video to high contrast threshold
   video.loadPixels();
+  if (video.pixels.length == 0) {
+    return;
+  }
   for (int i=0; i<p.width*p.height; i++) {
     if (brightness(video.pixels[i]) > threshold && brightness(video.pixels[i]) < threshold+thresholdDist) {
       p.pixels[i]  = color(0); // White
