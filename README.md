@@ -37,6 +37,6 @@ This project is licensed under the LGPL License - see [LICENSE.md](LICENSE.md) f
 ## Acknowledgments
 
 * [Just Van Rossum](http://dailydrawbot.tumblr.com), the enlightening conversation on my X-Y attempts.
-* [Stefanie Bräuer](https://medienwissenschaft.philhist.unibas.ch/de/personen/stefanie-braeuer/), feeding the obsession with crucial theory + context.
+* [Stefanie Bräuer](https://stefaniebraeuer.ch/), feeding the obsession with crucial theory + context.
 * [Hansi Raber](https://asdfg.me), java meta insights + finding external WaveTable bug!
 * [Processing Library Template](https://github.com/processing/processing-library-template)

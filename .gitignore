@@ -5,4 +5,5 @@ web
 .DS_Store
 .project
 .classpath
+tmp
 /bin/

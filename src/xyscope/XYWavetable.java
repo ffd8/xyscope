@@ -25,7 +25,7 @@ import ddf.minim.ugens.Waveform;
  * @author Mark Godfrey &lt;mark.godfrey@gatech.edu&gt;
  */
 
-class XYWavetable implements Waveform
+public class XYWavetable implements Waveform
 {
 
 	private float[]	waveform;

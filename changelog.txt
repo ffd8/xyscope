@@ -2,6 +2,22 @@
 * changed
 - removed
 
+////////////////////////////////////////////////////////////
+XYScope 2.3.0 (REV 5) - 21.02.2023
+
++ NEWER & IMPROVEDER buildWaves() technique (added -3, to those who like previous)
++ Added Hershey Fonts (single line) w/ many functions (textFont, textSize, textAlign, textPaths, textWidth, 
++ Added circle() + square() to match p5/Processing
++ Added steps() for multiplier of segments between points
++ resetWaves() alias of waveReset(), to keep style of clearWaves() and buildWaves()
++ XYZ WaveTables are public to grab values for other usage
++ pan(left, right) to swap pans of channels incase cables physically swapped
+
+
+* ellipse() + rect() now work with 3 params like Processing
+* ellipse()/circle() fixed connecting point
+* point() fixed 
+
 
 ////////////////////////////////////////////////////////////
 XYScope 2.2.0 (REV 4) - 20.12.2018

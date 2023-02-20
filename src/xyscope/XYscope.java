@@ -1,5 +1,5 @@
 /*
- * cc ted davis 2017-18
+ * cc ted davis 2017-23
  */
 
 package xyscope;
@@ -50,7 +50,10 @@ public class XYscope {
 	 */
 	public Oscil waveX, waveY, waveZ;
 
-	XYWavetable tableX, tableY, tableZ;
+	/**
+	 * minim Wavetable, for customizing XYZ oscillators.
+	 */
+	public XYWavetable tableX, tableY, tableZ;
 	Pan panX = new Pan(-1);
 	Pan panY = new Pan(1);
 
@@ -65,7 +68,11 @@ public class XYscope {
 	AudioOutput mixXY;
 	boolean useMix = false;
 
-	int waveSizeVal = 512;
+	int sampleRate = 44100; // def 44100
+	int bufferSize = 512; // def 1024
+	String mixerName = "";
+	
+	int waveSizeVal = bufferSize;
 	int waveSizeValOG = waveSizeVal;
 	int maxPoints = waveSizeValOG;
 	public float[] shapeY = new float[waveSizeVal];
@@ -75,10 +82,7 @@ public class XYscope {
 	float[] shapePreX = new float[waveSizeVal];
 	float[] shapePreZ = new float[waveSizeVal];
 	
-	/**
-	 * Optionally activate debugging (mouseX shows waveform on drawn form)
-	 */
-	public boolean debugWave = false;
+	boolean debugWave = false;
 	int debugSize = 10;
 	boolean busy = false;
 
@@ -160,7 +164,7 @@ public class XYscope {
 		myParent = theParent;
 		welcome();
 		initMinim();
-		setMixer();
+		setOutput();
 	}
 
 	/**
@@ -193,6 +197,7 @@ public class XYscope {
 		getMixerInfo();
 		initMinim();
 		setMixer(xyMixer);
+		setOutput();
 	}
 
 	/**
@@ -207,9 +212,9 @@ public class XYscope {
 	public XYscope(PApplet theParent, int sampleR) {
 		myParent = theParent;
 		welcome();
-		getMixerInfo();
 		initMinim();
-		setMixer(sampleR);
+		sampleRate = sampleR;
+		setOutput();
 	}
 
 	/**
@@ -228,11 +233,37 @@ public class XYscope {
 		welcome();
 		getMixerInfo();
 		initMinim();
-		setMixer(xyMixer, sampleR);
+		setMixer(xyMixer);
+		sampleRate = sampleR;
+		setOutput();
+	}
+	
+	/**
+	 * Initialize library in setup(), custom soundcard by string for XY and set
+	 * custom sample rate (44100, 192000).
+	 * 
+	 * @param theParent
+	 *            PApplet to apply to, typically 'this'
+	 * @param xyMixer
+	 *            Name of custom sound mixer to use for XY.
+	 * @param sampleRateVal
+	 *            Sample rate for soundcard (44100, 48000, 96000, 192000).
+	 * @param bufferSizeVal
+	 *            Size of buffer/latency for cpu/soundcard (128, 256, 512, 1024, 2048).
+	 */
+	public XYscope(PApplet theParent, String xyMixer, int sampleRateVal, int bufferSizeVal) {
+		myParent = theParent;
+		welcome();
+		getMixerInfo();
+		initMinim();
+		setMixer(xyMixer);
+		sampleRate = sampleRateVal;
+		bufferSize = bufferSizeVal;
+		setOutput();
 	}
 
 	private void welcome() {
-		System.out.println("XYscope 2.2.0 by Ted Davis http://teddavis.org");
+		System.out.println("XYscope 2.3.0 - https://teddavis.org/xyscope");
 		xyWidth = myParent.width;
 		xyHeight = myParent.height;
 		initText();
@@ -267,31 +298,38 @@ public class XYscope {
 		minimR = new Minim(myParent);
 		minimBG = new Minim(myParent);
 	}
-
-	private void setMixer() {
-		outXY = minim.getLineOut(Minim.STEREO, waveSizeValOG);
-		setWaveTable();
-	}
-
-	private void setMixer(int sampleR) {
-		outXY = minim.getLineOut(Minim.STEREO, waveSizeValOG, sampleR);
-		setWaveTable();
-	}
+	
+	// *** add mixer() as getter and setter?? add bufferSize as initial option param
 
 	private void setMixer(String xyMixer) {
 		getMixerInfo();
 		Mixer mixer = getMixerByName(xyMixer);
 		minim.setOutputMixer(mixer);
-		outXY = minim.getLineOut(Minim.STEREO, waveSizeValOG);
+	}
+	
+	private void setOutput() {
+		outXY = minim.getLineOut(Minim.STEREO, bufferSize, sampleRate);
 		setWaveTable();
 	}
-
-	private void setMixer(String xyMixer, int sampleR) {
-		getMixerInfo();
-		Mixer mixer = getMixerByName(xyMixer);
-		minim.setOutputMixer(mixer);
-		outXY = minim.getLineOut(Minim.STEREO, waveSizeValOG, sampleR);
-		setWaveTable();
+	
+	public int sampleRate() {
+		return sampleRate;
+	}
+	
+	public void sampleRate(int sampleRateVal) {
+		sampleRate = sampleRateVal;
+		setOutput();
+	}
+	
+	public int bufferSize() {
+		return outXY.bufferSize();
+	}
+	
+	public void bufferSize(int bufferSizeVal) {
+		if(bufferSizeVal > 16) {
+			bufferSize = bufferSizeVal;
+		}
+		setOutput();
 	}
 
 	private void setWaveTable() {
@@ -352,6 +390,15 @@ public class XYscope {
 		waveY.reset();
 		if (useZ)
 			waveZ.reset();
+	}
+	
+	/**
+	 * Reset time-step used by XYZ oscillators if they slip when changing
+	 * frequencies.
+	 * 
+	 */
+	public void resetWaves() {
+		waveReset();
 	}
 
 	/**
@@ -471,7 +518,7 @@ public class XYscope {
 
 
 	/**
-	 * Returns current value for border that limtis rendering to edges of screen.
+	 * Returns current value for border that limits rendering to edges of screen.
 	 * 
 	 * @return limitVal
 	 */
@@ -1001,6 +1048,18 @@ public class XYscope {
 		if (useZ)
 			waveZ.setFrequency(freq.z);
 	}
+	
+	/**
+	 * Adjust the (x, y) panning, mainly useful if swapping cables digitally. Default (-1, 1)
+	 * 
+	 * @param panXVal
+	 *            int - pan for x/left channel
+	 * @param panYVal
+	 *            int - pan for y/right channel	 */
+	public void pan(int panXVal, int panYVal) {
+		panX.setPan(panXVal);
+		panY.setPan(panYVal);
+	}
 
 	/**
 	 * Enable/Disable easing transitions from one set of buildWaves() to the
@@ -1117,6 +1176,27 @@ public class XYscope {
 				RGBshape = new XYShape();
 		}
 	}
+	
+	
+	private double lerp(double start, double end, double amt) {
+		  return start + (end-start)*amt;
+		}
+	
+	public void buildWavesTest(ArrayList<PVector> wc) {
+		if(wc.size() > 128) {
+			waveSize(floor((wc.size())/2)*2);
+		}
+//		waveSize(1024);
+		float[] mfx = new float[wc.size()];
+		float[] mfy = new float[wc.size()];
+		for(int i=0; i<wc.size();i++) {
+			PVector tc = wc.get(i);
+			mfx[i] = map(tc.x, 0f, 1f, -1f, 1f);
+			mfy[i] = map(tc.y, 0f, 1f, 1f, -1f);
+		}
+		tableX.setWaveform(mfx);
+		tableY.setWaveform(mfy);
+	}
 
 	/**
 	 * Generate the XY oscillator waveforms from all added shapes for sending
@@ -1127,7 +1207,62 @@ public class XYscope {
 	 * @param bwm int for buildWaves mode
 	 */
 	public void buildWaves(int bwm) {
-		if(bwm == 0){ // waveform gen v3 sep 2018
+		if(bwm == 0) { // waveform gen v4 mar 2020... 23
+			if (shapes.size() > 0) {
+				double wave_size = shapes.getPoints().size()*stepsSize;//waveSize(); // 1024.0;// // 512
+				double total_dist = shapes.getDistance();
+				double tot = 0.0;
+//				println(wave_size);
+				ArrayList<PVector> wave_col = new ArrayList<PVector>();
+				for (int i=0; i < shapes.size(); i++) {
+	//				XYShape shape = shapes.get(i);
+					double shapeDist = shapes.get(i).getDistance();
+	//				println(shapeDist/total_dist); // *** should be used?
+					ArrayList<PVector> pv = shapes.get(i);
+					//println(pv);
+					for (int j=0; j < pv.size()-1; j++) { // what about point?
+						PVector p1 = pv.get(j);
+						PVector p2 = pv.get(j+1);
+						double line_dist = dist(p1.x, p1.y, p2.x, p2.y);
+						tot += line_dist;
+						double sec_per = Math.round(1+line_dist / total_dist * wave_size);
+	//					double sec_per = line_dist / total_dist * wave_size;
+						double steps = 1.0 / sec_per;
+	//					println(steps +" / "+ (float)steps);
+	//					println(sec_per);
+						for (int k=0; k <= sec_per; k++) {
+	//						double dx = lerp(p1.x, p2.x, k*steps);
+	//						double dy = lerp(p1.y, p2.y, k*steps);
+	//						wave_col.add(new PVector((float)dx, (float)dy));
+	//						float lstep = (float)k*steps;
+							PVector seg = PVector.lerp(p1, p2, (float)((float)k*steps));
+	//						println((float)((float)k*steps));
+							wave_col.add(seg);
+						}
+					}
+				}
+				
+				// *** better to self adjust or keep constant??
+	//			if(wave_col.size() > 128) {
+	//				waveSize(floor((wave_col.size())/2)*2);
+	//			}
+	//			waveSize(16);
+				float[] mfx = new float[waveSize()];
+				float[] mfy = new float[waveSize()];
+				for(int i=0; i<waveSize();i++) {
+					int waveIndex = floor(map(i, 0, waveSize(), 0, wave_col.size()));
+					PVector tc = wave_col.get(waveIndex);
+	//				mfx[i] = map(tc.x, 0f, 1f, -1f, 1f);
+	//				mfy[i] = map(tc.y, 0f, 1f, 1f, -1f);
+					mfx[i] = tc.x * 2f - 1f;
+					mfy[i] = tc.y * -2f + 1f;
+				}
+				tableX.setWaveform(mfx);
+				tableY.setWaveform(mfy);
+			}else {
+				emptyWave();
+			}
+		} else if(bwm == -3){ // waveform gen v3 sep 2018
 			if (shapes.size() > 0) {
 				XYWavetable mx = new XYWavetable(2);
 				XYWavetable my = new XYWavetable(2);
@@ -1239,16 +1374,7 @@ public class XYscope {
 
 				}
 			}else{
-				tableX.setWaveform(new float[0]);
-				tableY.setWaveform(new float[0]);
-				if(useZ)
-					tableZ.setWaveform(new float[0]);
-
-				if(useLaser){
-					tableR.setWaveform(new float[0]);
-					tableG.setWaveform(new float[0]);
-					tableB.setWaveform(new float[0]);
-				}
+				emptyWave();
 			}
 		} else if (bwm == -2) { // waveform gen v2 may 2018
 			if (shapes.size() > 0) {
@@ -1335,6 +1461,27 @@ public class XYscope {
 				tableY.smooth(smoothVal);
 			}
 		}
+	}
+	
+	private void emptyWave() {
+		tableX.setWaveform(new float[0]);
+		tableY.setWaveform(new float[0]);
+		if(useZ)
+			tableZ.setWaveform(new float[0]);
+
+		if(useLaser){
+			tableR.setWaveform(new float[0]);
+			tableG.setWaveform(new float[0]);
+			tableB.setWaveform(new float[0]);
+		}
+	}
+	
+	// *** remove??
+	public void warpWave(int mx, int pmx) {
+		 float warpPoint = constrain( (float)pmx / myParent.width, 0, 1 );
+		 float warpTarget = constrain( (float)mx / myParent.width, 0, 1 );
+		 tableX.warp( warpPoint, warpTarget );
+		 tableY.warp( warpPoint, warpTarget );
 	}
 
 	private void buildColorWave(XYWavetable tableTemp, String RGBval, int dashTemp){
@@ -1472,7 +1619,7 @@ public class XYscope {
 
 	/**
 	 * Enable/disable Smooth waveforms to reduce visibility of points in
-	 * drawing. Default is false (new rendering doesn't need it).
+	 * drawing. Default is false (not applied since revision 3).
 	 * 
 	 * @param smoothWavesBool
 	 *            true/false
@@ -1482,7 +1629,8 @@ public class XYscope {
 	}
 
 	/**
-	 * Get number of steps for smoothing waveforms.
+	 * Get number of steps for smoothing waveforms. 
+	 * (not applied since revision 3)
 	 * 
 	 * @return int
 	 * 
@@ -1496,6 +1644,7 @@ public class XYscope {
 
 	/**
 	 * Set number of steps for smoothing waveforms. Default is 12.
+	 * (not applied since revision 3)
 	 * 
 	 * @param swAmount
 	 *            new int value for smoothening waveform
@@ -1817,6 +1966,26 @@ public class XYscope {
 		}
 	}
 	
+	int stepsSize = 24;
+	/**
+	 * Get steps multiplier (number of segments) between each point.
+	 * 
+	 * @return int
+	 */
+	public int steps() {
+		return stepsSize;
+	}
+
+	/**
+	 * Set steps multiplier (number of segments) between each point.
+	 * 
+	 * @param newSteps
+	 *            int for segments multiplier
+	 */
+	public void steps(float newSteps) {
+		stepsSize = parseInt(newSteps);
+	}
+	
 	/**
 	 * Draw square, expects square(x, y, extent).
 	 * 
@@ -1936,7 +2105,7 @@ public class XYscope {
 		float s = sin(theta);
 		float t;
 
-		float x = 1f;// we start at angle = 0
+		float x = .5f;// we start at angle = 0
 		float y = 0f;
 
 		beginShape();
@@ -1962,10 +2131,7 @@ public class XYscope {
 	 *      Reference » point()</a>
 	 */
 	public void point(float x, float y) {
-		beginShape();
-		vertex(x, y);
-		vertex(x, y);
-		endShape();
+		line(x, y, x+1, y+1);
 	}
 
 	/**
@@ -1979,10 +2145,7 @@ public class XYscope {
 	 *      Reference » point()</a>
 	 */
 	public void point(float x, float y, float z) {
-		beginShape();
-		vertex(x, y, z);
-		vertex(x, y, z);
-		endShape();
+		line(x, y, z, x+1, y+1, z+1);
 	}
 
 	/**
@@ -2184,6 +2347,15 @@ public class XYscope {
 			}
 			hershey_font = hershey_font_string.split("\n");
 		}
+	}
+	
+	/**
+	 * Get size for built-in Hershey text rendering.
+	 * 
+	 * @return Float - size of text
+	 */
+	public float textSize(){
+		return hfactor;
 	}
 	
 	/**
@@ -2424,8 +2596,8 @@ public class XYscope {
 		 * @return float
 		 * 
 		 */
-		public float getDistance() {
-			float sum = 0;
+		public double getDistance() {
+			double sum = 0.0f;
 			for (XYShape shape : this) {
 				sum += shape.getDistance();
 			}
@@ -2467,10 +2639,10 @@ public class XYscope {
 
 	public class XYShape extends ArrayList<PVector> {
 
-		public float getDistance() {
-			float sum = 0;
+		public double getDistance() {
+			double sum = 0.0f;
 			for (int i = 0; i < size() - 1; i++) {
-				sum += get(i).dist(get(i + 1));
+				sum += dist(get(i).x, get(i).y, get(i+1).x, get(i+1).y);//get(i).dist(get(i + 1));
 			}
 			return sum;
 		}
