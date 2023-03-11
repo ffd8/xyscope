@@ -33,13 +33,13 @@ void draw() {
   // draw text
   xy.textSize(50);
   xy.textAlign(CENTER, CENTER);
-  xy.text(txt, width/2, height*.35);
+  xy.text(txt, width/2, height*.25);
 
   // draw text per character
-  float xoff = -xy.textWidth(txt)/2;
-  for (int i = 0; i < txt.length(); i++) {
+  float xoff = -xy.textWidth(txt)/2.5;
+  for (int i=0; i<txt.length(); i++) {
     push();
-    translate(width/2+xoff, height*.5 + sin(i*5+frameCount*.1)*15);
+    translate(width/2+xoff, height*.5);
     rotateX(radians(i*15+frameCount));
     xy.text(txt.charAt(i)+"", 0, 0);
     pop();
@@ -48,7 +48,7 @@ void draw() {
 
 
   // get and draw paths of text
-  PVector[][] textPaths = xy.textPaths(txt, width/2, floor(height*.65));
+  PVector[][] textPaths = xy.textPaths(txt, width/2, floor(height*.75));
   for (int i = 0; i < textPaths.length; i++) {
     xy.beginShape();
     for (int j = 0; j < textPaths[i].length; j++) {

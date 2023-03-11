@@ -32,7 +32,8 @@ public class XYscope {
 	public XYShapeList shapes = new XYShapeList();
 
 	// minim
-	Minim minim, minimZ;
+	public Minim minim, minimZ;
+	public AudioRecorder recorder;
 
 	/**
 	 * minim AudioOutput, for customizing audio out.
@@ -106,6 +107,7 @@ public class XYscope {
 	// TYPE VARS
 	String hershey_font[];
 	int hheight = 21;
+	float hleading = 30f;
 	float hfactor = 1;
 	int textAlignX = 37;
 	int textAlignY = 101;
@@ -126,18 +128,18 @@ public class XYscope {
 
 	// LASER VARS
 	boolean useLaser = false;
-	Minim minimR, minimBG;
+	public Minim minimR, minimBG;
 
 	/**
 	 * minim Oscil, for customizing Laser RGB oscillators.
 	 */
 	public Oscil waveR, waveG, waveB; 
 
-	XYWavetable tableR, tableG, tableB;
+	public XYWavetable tableR, tableG, tableB;
 	Pan panR = new Pan(1);
 	Pan panG = new Pan(-1);
 	Pan panB = new Pan(1);
-	AudioOutput outR, outBG;
+	public AudioOutput outR, outGB;
 
 	public float[] shapeR = new float[waveSizeVal];
 	public float[] shapeG = new float[waveSizeVal];
@@ -263,7 +265,7 @@ public class XYscope {
 	}
 
 	private void welcome() {
-		System.out.println("XYscope 2.3.0 - https://teddavis.org/xyscope");
+		System.out.println("XYscope 3.0.0 - https://teddavis.org/xyscope");
 		xyWidth = myParent.width;
 		xyHeight = myParent.height;
 		initText();
@@ -622,7 +624,7 @@ public class XYscope {
 		minimR.setOutputMixer(mixerR);
 		minimBG.setOutputMixer(mixerBG);
 		outR = minimR.getLineOut(Minim.STEREO, waveSizeValOG);
-		outBG = minimBG.getLineOut(Minim.STEREO, waveSizeValOG);
+		outGB = minimBG.getLineOut(Minim.STEREO, waveSizeValOG);
 		setWaveTableRGB();
 		useLaser = true;
 
@@ -642,12 +644,12 @@ public class XYscope {
 		tableG = new XYWavetable(2);
 		waveG = new Oscil(freq.x, amp.x, tableG);
 		tableG.setWaveform(shapeG);
-		waveG.patch(panG).patch(outBG);
+		waveG.patch(panG).patch(outGB);
 
 		tableB = new XYWavetable(2);
 		waveB = new Oscil(freq.x, amp.x, tableB);
 		tableB.setWaveform(shapeB);
-		waveB.patch(panB).patch(outBG);
+		waveB.patch(panB).patch(outGB);
 	}
 
 	/**
@@ -1050,13 +1052,13 @@ public class XYscope {
 	}
 	
 	/**
-	 * Adjust the (x, y) panning, mainly useful if swapping cables digitally. Default (-1, 1)
+	 * Adjust the (x, y) panning, mainly useful if swapping cables digitally. Default (-1.0, 1.0)
 	 * 
 	 * @param panXVal
-	 *            int - pan for x/left channel
+	 *            float - pan for x/left channel
 	 * @param panYVal
-	 *            int - pan for y/right channel	 */
-	public void pan(int panXVal, int panYVal) {
+	 *            float - pan for y/right channel	 */
+	public void pan(float panXVal, float panYVal) {
 		panX.setPan(panXVal);
 		panY.setPan(panYVal);
 	}
@@ -1209,56 +1211,65 @@ public class XYscope {
 	public void buildWaves(int bwm) {
 		if(bwm == 0) { // waveform gen v4 mar 2020... 23
 			if (shapes.size() > 0) {
-				double wave_size = shapes.getPoints().size()*stepsSize;//waveSize(); // 1024.0;// // 512
+				double wave_size = shapes.getPoints().size()*stepsSize;
 				double total_dist = shapes.getDistance();
 				double tot = 0.0;
-//				println(wave_size);
 				ArrayList<PVector> wave_col = new ArrayList<PVector>();
 				for (int i=0; i < shapes.size(); i++) {
-	//				XYShape shape = shapes.get(i);
 					double shapeDist = shapes.get(i).getDistance();
-	//				println(shapeDist/total_dist); // *** should be used?
 					ArrayList<PVector> pv = shapes.get(i);
-					//println(pv);
 					for (int j=0; j < pv.size()-1; j++) { // what about point?
 						PVector p1 = pv.get(j);
 						PVector p2 = pv.get(j+1);
 						double line_dist = dist(p1.x, p1.y, p2.x, p2.y);
 						tot += line_dist;
 						double sec_per = Math.round(1+line_dist / total_dist * wave_size);
-	//					double sec_per = line_dist / total_dist * wave_size;
 						double steps = 1.0 / sec_per;
-	//					println(steps +" / "+ (float)steps);
-	//					println(sec_per);
 						for (int k=0; k <= sec_per; k++) {
-	//						double dx = lerp(p1.x, p2.x, k*steps);
-	//						double dy = lerp(p1.y, p2.y, k*steps);
-	//						wave_col.add(new PVector((float)dx, (float)dy));
-	//						float lstep = (float)k*steps;
 							PVector seg = PVector.lerp(p1, p2, (float)((float)k*steps));
-	//						println((float)((float)k*steps));
 							wave_col.add(seg);
 						}
 					}
 				}
 				
-				// *** better to self adjust or keep constant??
-	//			if(wave_col.size() > 128) {
-	//				waveSize(floor((wave_col.size())/2)*2);
-	//			}
-	//			waveSize(16);
 				float[] mfx = new float[waveSize()];
 				float[] mfy = new float[waveSize()];
+				float[] mfz = new float[waveSize()];
 				for(int i=0; i<waveSize();i++) {
 					int waveIndex = floor(map(i, 0, waveSize(), 0, wave_col.size()));
 					PVector tc = wave_col.get(waveIndex);
-	//				mfx[i] = map(tc.x, 0f, 1f, -1f, 1f);
-	//				mfy[i] = map(tc.y, 0f, 1f, 1f, -1f);
 					mfx[i] = tc.x * 2f - 1f;
 					mfy[i] = tc.y * -2f + 1f;
+					mfz[i] = zaxisMax;
+					
+					// *** double check if z works w/ shape on.off..
+					if(tc.z == 1f)
+						mfz[i] = zaxisMin;
+					
+					// *** test vectrex
+					float tfxx = mfx[i];
+					float tfyy = mfy[i];
+
+					if(useVectrex){
+						if(vectrexRotation == 90){
+							mfx[i] = tfyy;
+							mfy[i] = tfxx*-1;
+						}else if(vectrexRotation == -90){
+							mfx[i] = tfyy*-1;
+							mfy[i] = tfxx;
+						}else if(vectrexRotation == 0){
+							mfx[i] = tfxx*-1;
+							mfy[i] = tfyy*-1;
+						}
+					}
+					
 				}
-				tableX.setWaveform(mfx);
-				tableY.setWaveform(mfy);
+				
+				setWaveforms(mfx, mfy, mfz);
+				
+				if(useLaser){
+					buildLaser();
+				}
 			}else {
 				emptyWave();
 			}
@@ -1317,61 +1328,10 @@ public class XYscope {
 
 				}
 
-				// limit points
-				if(useLimitPoints && (mfx.length > limitPointsVal || mfy.length > limitPointsVal)){
-					float[] lx = new float[limitPointsVal];
-					float[] ly = new float[limitPointsVal];
-					float[] lz = new float[limitPointsVal];
-					for(int i=0; i < limitPointsVal; i++){
-						int mfxSel = floor(map(i, 0, limitPointsVal, 0, mfx.length));
-						int mfySel = floor(map(i, 0, limitPointsVal, 0, mfy.length));
-						int mfzSel = floor(map(i, 0, limitPointsVal, 0, mfz.length));
-						lx[i] = mfx[mfxSel];
-						ly[i] = mfy[mfySel];
-						lz[i] = mfz[mfzSel];
-					}
-					tableX.setWaveform(lx);
-					tableY.setWaveform(ly);
-					if(useZ)
-						tableZ.setWaveform(lz);
-				}else{
-					tableX.setWaveform(mfx);
-					tableY.setWaveform(mfy);
-					if(useZ)
-						tableZ.setWaveform(mfz);
-				}
-
-
+				setWaveforms(mfx, mfy, mfz);
+				
 				if(useLaser){
-					// spotkiller checkSize
-					boolean checkSize = false;
-					AudioOutput tempXY = outXY;
-
-					for (int i = 0; i < tempXY.bufferSize() - 1; i++) {
-						float lAudio = abs(tempXY.left.get(i) * (float) xyWidth / 2);
-						float rAudio = abs(tempXY.right.get(i) * (float) xyHeight / 2);
-						if(lAudio > laserCutoffVal || rAudio > laserCutoffVal)
-							checkSize = true;
-					}
-					if(checkSize){
-						if(RGBshape.size() > 0){
-							buildColorWave(tableR, "x", floor(lsDash.x));
-							buildColorWave(tableG, "y", floor(lsDash.y));
-							buildColorWave(tableB, "z", floor(lsDash.z));
-						}else{
-							float[] tfr = {lsWB.x/255f};
-							float[] tfg = {lsWB.y/255f};
-							float[] tfb = {lsWB.z/255f};
-							tableR.setWaveform(tfr);
-							tableG.setWaveform(tfg);
-							tableB.setWaveform(tfb);
-						}
-					}else{
-						tableR.setWaveform(new float[0]);
-						tableG.setWaveform(new float[0]);
-						tableB.setWaveform(new float[0]);
-					}
-
+					buildLaser();
 				}
 			}else{
 				emptyWave();
@@ -1463,6 +1423,32 @@ public class XYscope {
 		}
 	}
 	
+	public void setWaveforms(float[] mfx, float[] mfy, float[] mfz) {
+		// limit points
+		if(useLimitPoints && (mfx.length > limitPointsVal || mfy.length > limitPointsVal)){
+			float[] lx = new float[limitPointsVal];
+			float[] ly = new float[limitPointsVal];
+			float[] lz = new float[limitPointsVal];
+			for(int i=0; i < limitPointsVal; i++){
+				int mfxSel = floor(map(i, 0, limitPointsVal, 0, mfx.length));
+				int mfySel = floor(map(i, 0, limitPointsVal, 0, mfy.length));
+				int mfzSel = floor(map(i, 0, limitPointsVal, 0, mfz.length));
+				lx[i] = mfx[mfxSel];
+				ly[i] = mfy[mfySel];
+				lz[i] = mfz[mfzSel];
+			}
+			tableX.setWaveform(lx);
+			tableY.setWaveform(ly);
+			if(useZ)
+				tableZ.setWaveform(lz);
+		}else{
+			tableX.setWaveform(mfx);
+			tableY.setWaveform(mfy);
+			if(useZ)
+				tableZ.setWaveform(mfz);
+		}
+	}
+	
 	private void emptyWave() {
 		tableX.setWaveform(new float[0]);
 		tableY.setWaveform(new float[0]);
@@ -1482,6 +1468,37 @@ public class XYscope {
 		 float warpTarget = constrain( (float)mx / myParent.width, 0, 1 );
 		 tableX.warp( warpPoint, warpTarget );
 		 tableY.warp( warpPoint, warpTarget );
+	}
+	
+	private void buildLaser() {
+		// spotkiller checkSize
+		boolean checkSize = false;
+		AudioOutput tempXY = outXY;
+
+		for (int i = 0; i < tempXY.bufferSize() - 1; i++) {
+			float lAudio = abs(tempXY.left.get(i) * (float) xyWidth / 2);
+			float rAudio = abs(tempXY.right.get(i) * (float) xyHeight / 2);
+			if(lAudio > laserCutoffVal || rAudio > laserCutoffVal)
+				checkSize = true;
+		}
+		if(checkSize){
+			if(RGBshape.size() > 0){
+				buildColorWave(tableR, "x", floor(lsDash.x));
+				buildColorWave(tableG, "y", floor(lsDash.y));
+				buildColorWave(tableB, "z", floor(lsDash.z));
+			}else{
+				float[] tfr = {lsWB.x/255f};
+				float[] tfg = {lsWB.y/255f};
+				float[] tfb = {lsWB.z/255f};
+				tableR.setWaveform(tfr);
+				tableG.setWaveform(tfg);
+				tableB.setWaveform(tfb);
+			}
+		}else{
+			tableR.setWaveform(new float[0]);
+			tableG.setWaveform(new float[0]);
+			tableB.setWaveform(new float[0]);
+		}
 	}
 
 	private void buildColorWave(XYWavetable tableTemp, String RGBval, int dashTemp){
@@ -1949,6 +1966,16 @@ public class XYscope {
 	public void ellipseDetail(int newED) {
 		ellipseDetail = newED;
 	}
+	
+	/**
+	 * Set detail (number of points) for drawing an ellipse.
+	 * 
+	 * @param newED
+	 *            float for facets of ellipse (rounded)
+	 */
+	public void ellipseDetail(float newED) {
+		ellipseDetail = round(newED);
+	}
 
 	/**
 	 * Set rectMode (similar to Processing function).
@@ -1980,10 +2007,76 @@ public class XYscope {
 	 * Set steps multiplier (number of segments) between each point.
 	 * 
 	 * @param newSteps
-	 *            int for segments multiplier
+	 *            float for segments multiplier (rounded)
 	 */
 	public void steps(float newSteps) {
 		stepsSize = parseInt(newSteps);
+	}
+	
+	
+	/**
+	 * Draw point, expects point(x, y).
+	 * 
+	 * @param x float - x position of point
+	 * @param y float - y position of point
+	 * 
+	 * @see <a href="https://processing.org/reference/point_.html">Processing
+	 *      Reference » point()</a>
+	 */
+	public void point(float x, float y) {
+		line(x, y, x+1, y+1);
+	}
+
+	/**
+	 * Draw point, expects point(x, y, z).
+	 * 
+	 * @param x float - x position of point
+	 * @param y float - y position of point
+	 * @param z float - z position of point
+	 * 
+	 * @see <a href="https://processing.org/reference/point_.html">Processing
+	 *      Reference » point()</a>
+	 */
+	public void point(float x, float y, float z) {
+		line(x, y, z, x+1, y+1, z+1);
+	}
+
+	/**
+	 * Draw line, expects line(x1, y1, x2, y2).
+	 * 
+	 * @param x1 float - first x position of point
+	 * @param y1 float - first y position of point
+	 * @param x2 float - second x position of point
+	 * @param y2 float - second y position of point
+	 * 
+	 * @see <a href="https://processing.org/reference/line_.html">Processing
+	 *      Reference » line()</a>
+	 */
+	public void line(float x1, float y1, float x2, float y2) {
+		beginShape();
+		vertex(x1, y1);
+		vertex(x2, y2);
+		endShape();
+	}
+
+	/**
+	 * Draw line, expects line(x1, y1, z1, x2, y2, z2).
+	 * 
+	 * @param x1 float - first x position of point
+	 * @param y1 float - first y position of point
+	 * @param z1 float - first z position of point
+	 * @param x2 float - second x position of point
+	 * @param y2 float - second y position of point
+	 * @param z2 float - second z position of point
+	 * 
+	 * @see <a href="https://processing.org/reference/line_.html">Processing
+	 *      Reference » line()</a>
+	 */
+	public void line(float x1, float y1, float z1, float x2, float y2, float z2) {
+		beginShape();
+		vertex(x1, y1, z1);
+		vertex(x2, y2, z2);
+		endShape();
 	}
 	
 	/**
@@ -2120,72 +2213,327 @@ public class XYscope {
 		}
 		endShape();
 	}
-
+	
 	/**
-	 * Draw point, expects point(x, y).
+	 * Draw lissajous curve, expects lissajous(xPos, yPos, radius, ratioA, ratioB, phase, resolution).
 	 * 
-	 * @param x float - x position of point
-	 * @param y float - y position of point
+	 * @param xPos float - x position of lissajous
+	 * @param yPos float - y position of lissajous
+	 * @param radius float - size of lissajous
+	 * @param ratioA float - lissajous ratio part A
+	 * @param ratioB float - lissajous ratio part B
+	 * @param phase float - phase of lissajous curve
+	 * @param resolution float - number of points for lissajous curve
 	 * 
-	 * @see <a href="https://processing.org/reference/point_.html">Processing
-	 *      Reference » point()</a>
 	 */
-	public void point(float x, float y) {
-		line(x, y, x+1, y+1);
-	}
-
-	/**
-	 * Draw point, expects point(x, y, z).
-	 * 
-	 * @param x float - x position of point
-	 * @param y float - y position of point
-	 * @param z float - z position of point
-	 * 
-	 * @see <a href="https://processing.org/reference/point_.html">Processing
-	 *      Reference » point()</a>
-	 */
-	public void point(float x, float y, float z) {
-		line(x, y, z, x+1, y+1, z+1);
-	}
-
-	/**
-	 * Draw line, expects line(x1, y1, x2, y2).
-	 * 
-	 * @param x1 float - first x position of point
-	 * @param y1 float - first y position of point
-	 * @param x2 float - second x position of point
-	 * @param y2 float - second y position of point
-	 * 
-	 * @see <a href="https://processing.org/reference/line_.html">Processing
-	 *      Reference » line()</a>
-	 */
-	public void line(float x1, float y1, float x2, float y2) {
+	public void lissajous(float xPos, float yPos, float radius, float ratioA, float ratioB, float phase, float resolution){
+		resolution = constrain(resolution, 1f, 360f);
 		beginShape();
-		vertex(x1, y1);
-		vertex(x2, y2);
+		for(int i=0; i < resolution+1; i++){
+			float theta = TWO_PI/resolution;
+			float x = sin(i*theta*ratioA)*radius;
+			float y = sin(radians(phase)+i*theta*ratioB)*radius;
+			vertex(xPos + x, yPos + y);
+		}
 		endShape();
 	}
 
 	/**
-	 * Draw line, expects line(x1, y1, z1, x2, y2, z2).
+	 * Draw box, expects box(size).
 	 * 
-	 * @param x1 float - first x position of point
-	 * @param y1 float - first y position of point
-	 * @param z1 float - first z position of point
-	 * @param x2 float - second x position of point
-	 * @param y2 float - second y position of point
-	 * @param z2 float - second z position of point
+	 * @param size float - size of box
 	 * 
-	 * @see <a href="https://processing.org/reference/line_.html">Processing
-	 *      Reference » line()</a>
+	 * @see <a href="https://processing.org/reference/box_.html">Processing
+	 *      Reference » box()</a>
 	 */
-	public void line(float x1, float y1, float z1, float x2, float y2, float z2) {
+
+	public void box(float size) {
+		box(size, size, size);
+	}
+
+	/**
+	 * Draw box, expects box(rx, ryz).
+	 * 
+	 * @param rx float - size of box in x-axis
+	 * @param ryz float - size of box in y/z-axis
+	 * 
+	 * @see <a href="https://processing.org/reference/box_.html">Processing
+	 *      Reference » box()</a>
+	 */
+
+	public void box(float rx, float ryz) {
+		box(rx, ryz, ryz);
+	}
+
+	/**
+	 * Draw box, expects box(rx, ry, rz).
+	 * 
+	 * @param rx float - size of box in x-axis
+	 * @param ry float - size of box in y-axis
+	 * @param rz float - size of box in z-axis
+	 * 
+	 * @see <a href="https://processing.org/reference/box_.html">Processing
+	 *      Reference » box()</a>
+	 */
+
+	// extended from: https://stackoverflow.com/a/72277489/10885535
+	public void box(float rxt, float ryt, float rzt) {
+		// half size: keep the pivot at the center of the mesh
+		float rx = rxt * .5f;
+		float ry = ryt * .5f;
+		float rz = rzt * .5f;
 		beginShape();
-		vertex(x1, y1, z1);
-		vertex(x2, y2, z2);
+
+		// back (-z)
+		vertex(-rx, -ry, -rz);
+		vertex(+rx, -ry, -rz);
+		vertex(+rx, +ry, -rz);
+		vertex(-rx, +ry, -rz);
+		// slide to otherside
+		vertex(-rx, -ry, -rz);
+		// front (+z)
+		vertex(-rx, -ry, +rz);
+		vertex(+rx, -ry, +rz);
+		vertex(+rx, +ry, +rz);
+		vertex(-rx, +ry, +rz);
+		// top (-y)
+		vertex(-rx, -ry, +rz);
+		vertex(-rx, -ry, -rz);
+		vertex(+rx, -ry, -rz);
+		vertex(+rx, -ry, +rz);
+		// bottom (+y)
+		vertex(+rx, +ry, +rz);
+		vertex(+rx, +ry, -rz);
+		vertex(-rx, +ry, -rz);
+		vertex(-rx, +ry, +rz);
+		// left (-x)
+		vertex(-rx, -ry, +rz);
+		vertex(-rx, -ry, -rz);
+		vertex(-rx, +ry, -rz);
+		vertex(-rx, +ry, +rz);
+		// slide to otherside
+		vertex(-rx, -ry, +rz);
+		// right (+x)
+		vertex(+rx, -ry, +rz);
+		vertex(+rx, -ry, -rz);
+		vertex(+rx, +ry, -rz);
+		vertex(+rx, +ry, +rz);
 		endShape();
 	}
 
+	// based on: Examples » Topics » Textures » Texture Sphere
+	int dx = 24;
+	int dy = 24;
+	
+	/**
+	 * Draw sphere, expects sphere(size).
+	 * 
+	 * @param size float - size of sphere
+	 * 
+	 * @see <a href="https://processing.org/reference/sphere_.html">Processing
+	 *      Reference » sphere()</a>
+	 */
+	
+	public void sphere(float rs) {
+		ellipsoid(rs, rs, rs, dx, dy);
+	}
+
+	/**
+	 * Draw sphere, expects sphere(size, verticesCount).
+	 * 
+	 * @param size float - size of sphere
+	 * @param verticesCount int - number of horzontal + vertical vertices
+	 * 
+	 * @see <a href="https://processing.org/reference/sphere_.html">Processing
+	 *      Reference » sphere()</a>
+	 */
+	
+	public void sphere(float rs, int dxy) {
+		ellipsoid(rs, rs, rs, dxy, dxy);
+	}
+	
+	/**
+	 * Draw sphere, expects sphere(size, verticiesW, verticiesH).
+	 * 
+	 * @param size float - size of sphere
+	 * @param verticiesW int - number of horzontal vertices
+	 * @param verticiesH int - number of vertical vertices
+	 * 
+	 * @see <a href="https://processing.org/reference/sphere_.html">Processing
+	 *      Reference » sphere()</a>
+	 */
+
+	public void sphere(float rs, int dx, int dy) {
+		ellipsoid(rs, rs, rs, dx, dy);
+	}
+	
+	/**
+	 * Draw ellipsoid, expects ellipsoid(rx, ry, rz).
+	 * 
+	 * @param rx float - size in x-axis
+	 * @param ry float - size in y-axis
+	 * @param rz float - size in z-axis
+	 * 
+	 * @see <a href="https://processing.org/reference/sphere_.html">Processing
+	 *      Reference » sphere()</a>
+	 */
+
+	public void ellipsoid(float rx, float ry, float rz) {
+		ellipsoid(rx, ry, rz, dx, dy);
+	}
+
+	/**
+	 * Draw ellipsoid, expects ellipsoid(rx, ry, rz, verticesCount).
+	 * 
+	 * @param rx float - size in x-axis
+	 * @param ry float - size in y-axis
+	 * @param rz float - size in z-axis
+	 * @param verticesCount int - number of horzontal + vertical vertices
+	 * 
+	 * @see <a href="https://processing.org/reference/sphere_.html">Processing
+	 *      Reference » sphere()</a>
+	 */
+	
+	public void ellipsoid(float rx, float ry, float rz, int dxy) {
+		ellipsoid(rx, ry, rz, dxy, dxy);
+	}
+
+	/**
+	 * Draw ellipsoid, expects ellipsoid(rx, ry, rz, verticesCount).
+	 * 
+	 * @param rx float - size in x-axis
+	 * @param ry float - size in y-axis
+	 * @param rz float - size in z-axis
+	 * @param verticiesW int - number of horzontal vertices
+	 * @param verticiesH int - number of vertical vertices
+	 * 
+	 * @see <a href="https://processing.org/reference/sphere_.html">Processing
+	 *      Reference » sphere()</a>
+	 */
+	
+	public void ellipsoid(float rxt, float ryt, float rzt, int dx, int dy) {
+
+		float rx = rxt;// * .5f;
+		float ry = ryt;// * .5f;
+		float rz = rzt;// * .5f;
+				
+		int numPointsW;
+		int numPointsH_2pi;
+		int numPointsH;
+
+		float[] coorX;
+		float[] coorY;
+		float[] coorZ;
+		float[] multXZ;
+
+		int numvW = constrain(dx, 1, 50);
+		int numvH_2pi = constrain(dy, 1, 50);
+
+		// The number of points around the width and height
+		numPointsW=numvW+1;
+		numPointsH_2pi=numvH_2pi;  // How many actual pts around the sphere (not just from top to bottom)
+		numPointsH=ceil((float)numPointsH_2pi/2f)+1;  // How many pts from top to bottom (abs(....) b/c of the possibility of an odd numPointsH_2pi)
+
+		coorX=new float[numPointsW];   // All the x-coor in a horizontal circle radius 1
+		coorY=new float[numPointsH];   // All the y-coor in a vertical circle radius 1
+		coorZ=new float[numPointsW];   // All the z-coor in a horizontal circle radius 1
+		multXZ=new float[numPointsH];  // The radius of each horizontal circle (that you will multiply with coorX and coorZ)
+
+		for (int i=0; i<numPointsW; i++) {  // For all the points around the width
+			float thetaW=i*2f*PI/(numPointsW-1);
+			coorX[i]=sin(thetaW);
+			coorZ[i]=cos(thetaW);
+		}
+
+		for (int i=0; i<numPointsH; i++) {  // For all points from top to bottom
+			if (parseInt(numPointsH_2pi/2) != (float)numPointsH_2pi/2 && i==numPointsH-1) {  // If the numPointsH_2pi is odd and it is at the last pt
+				float thetaH=(i-1f)*2f*PI/(numPointsH_2pi);
+				coorY[i]=cos(PI+thetaH);
+				multXZ[i]=0f;
+			} else {
+				//The numPointsH_2pi and 2 below allows there to be a flat bottom if the numPointsH is odd
+				float thetaH=i*2f*PI/(numPointsH_2pi);
+
+				//PI+ below makes the top always the point instead of the bottom.
+				coorY[i]=cos(PI+thetaH);
+				multXZ[i]=sin(thetaH);
+			}
+		}
+
+		beginShape();
+		for (int i=0; i<(numPointsH-1); i++) {  // For all the rings but top and bottom
+			// Goes into the array here instead of loop to save time
+			float coory=coorY[i];
+			float cooryPlus=coorY[i+1];
+
+			float multxz=multXZ[i];
+			float multxzPlus=multXZ[i+1];
+
+			for (int j=0; j<numPointsW; j++) { // For all the pts in the ring
+				vertex(coorX[j]*multxz*rx, coory*ry, coorZ[j]*multxz*rz);
+				vertex(coorX[j]*multxzPlus*rx, cooryPlus*ry, coorZ[j]*multxzPlus*rz);
+			}
+		}
+		endShape();
+	}
+	
+	public void torus(float radius, float tubeRadius) {
+		torus(radius, tubeRadius, dx, dy);
+	}
+	
+	public void torus(float radius, float tubeRadius, int dxy) {
+		torus(radius, tubeRadius, dxy, dxy);
+	}
+	
+	/**
+	 * Draw torus, expects torus(radius, tubeRadius, detailX, detailY).
+	 * 
+	 * @param radius float - radius of torus
+	 * @param tubeRadius float - radius of torus tube
+	 * @param detailX int - number of horzontal vertices
+	 * @param detailY int - number of vertical vertices
+	 * 
+	 */
+	
+	// built upon: https://processing.org/examples/toroid.html
+	public void torus(float radius, float tubeRadius, int dx, int dy) {
+	  dx = constrain(dx, 1, 50);
+	  dy = constrain(dy, 1, 50);
+	  //tubeRadius = constrain(tubeRadius, 1, radius);
+
+	  float angle = 0f;
+	  float latheAngle = 0f;
+	  PVector vertices[] = new PVector[dx+1];
+	  PVector vertices2[] = new PVector[dx+1];
+
+	  // fill arrays
+	  for (int i=0; i<=dx; i++) {
+	    vertices[i] = new PVector();
+	    vertices2[i] = new PVector();
+	    vertices[i].x = radius + sin(radians(angle))*tubeRadius;
+	    vertices[i].z = cos(radians(angle))*tubeRadius;
+	    angle+=360.0f/dx;
+	  }
+
+	  // draw toroid
+	  latheAngle = 0f;
+	  for (int i=0; i<=dy; i++) {
+	    beginShape();
+
+	    for (int j=0; j<=dx; j++) {
+	      if (i > 0) {
+	        vertex(vertices2[j].x, vertices2[j].y, vertices2[j].z);
+	      }
+	      vertices2[j].x = cos(radians(latheAngle))*vertices[j].x;
+	      vertices2[j].y = sin(radians(latheAngle))*vertices[j].x;
+	      vertices2[j].z = vertices[j].z;
+	      vertex(vertices2[j].x, vertices2[j].y, vertices2[j].z);
+	    }
+	    latheAngle+=360.0f/dy;
+	    endShape();
+	  }
+	}
+	
 	/**
 	 * Begin multi-vertex shape.
 	 * 
@@ -2296,11 +2644,40 @@ public class XYscope {
 				sx = myParent.screenX(p.x, p.y);
 				sy = myParent.screenY(p.x, p.y);
 			}
-			if ((sx >= limitVal && sx <= xyWidth - limitVal) && (sy >= limitVal && sy <= xyHeight - limitVal))
+			if ((sx >= limitVal && sx <= xyWidth - limitVal) && (sy >= limitVal && sy <= xyHeight - limitVal)) {
 				currentShape.add(normP);
+			}else {
+				endShape();
+				beginShape();
+//				initShape = true;
+			}
 		}else{
 			currentShape.add(normP);
 		}
+	}
+	
+	/**
+	 * End complex shape.
+	 * 
+	 * @see <a href="https://processing.org/reference/endShape_.html">Processing
+	 *      Reference » endShape()</a>
+	 */
+	public void endShape(int close) {
+		if(close == 2) {
+			PVector lastC = currentShape.get(0);
+			currentShape.add(new PVector(lastC.x, lastC.y, 0));
+		}
+		endShape();
+//		// not necessary in current setup. maybe useful later for z-axis
+//		if(currentShape.size() > 1) {
+//			currentShape.get(currentShape.size()-1).z = 1f;
+//		}else {
+//			// Calculate index of last element
+//	        int index = shapes.size() - 1;
+//	  
+//	        // Delete last element by passing index
+//	        shapes.remove(index);
+//		}
 	}
 
 	/**
@@ -2311,9 +2688,44 @@ public class XYscope {
 	 */
 	public void endShape() {
 		// not necessary in current setup. maybe useful later for z-axis
-		if(currentShape.size() > 1)
+		if(currentShape.size() > 1) {
 			currentShape.get(currentShape.size()-1).z = 1f;
+		}else {
+			// Calculate index of last element
+	        int index = shapes.size() - 1;
+	  
+	        // Delete last element by passing index
+	        shapes.remove(index);
+		}
 	}
+	
+	/*
+	 * RECORDER OUT FUNCTIONS */
+	
+	public void recorderBegin() {
+		recorderBegin("XYscope");
+	}
+
+	public void recorderBegin(String filename) {
+		String date = new java.text.SimpleDateFormat("yyyy_MM_dd_kkmmssSSS").format(new java.util.Date()); 
+	  	recorder = minim.createRecorder(outXY, filename + "_" + date + ".wav");
+		recorder.beginRecord();
+		println("XYscope - beginRecord");
+	}
+
+	public void recorderEnd() {
+		recorder.endRecord();
+		recorder.save();
+		println("XYscope - endRecord + saved!");
+	}
+
+	
+	
+	/* 
+	 * HERSHEY Font meets Processing text() functions 
+	 * HUGE THX to this lib: https://github.com/ixd-hof/HersheyFont
+	 * 
+	 * */
 	
 	private boolean contains(String[] arr, String val) {
 		for(int i=0; i<arr.length; i++) {
@@ -2367,6 +2779,25 @@ public class XYscope {
 	public void textSize(float fontSize){
 		hfactor = fontSize/hheight;
 	}
+	
+	/**
+	 * Get the spacing between lines of text in units of pixels.
+	 * 
+	 * @return Float - the size in pixels for spacing between lines
+	 */
+	public float textLeading(){
+		return hleading;
+	}
+	
+	/**
+	 * Sets the spacing between lines of text in units of pixels.
+	 * 
+	 * @param fontLeading
+	 *            Float - 	the size in pixels for spacing between lines
+	 */
+	public void textLeading(float leading){
+		hleading = leading;
+	}
 		
 	/**
 	 * Set horizontal alignment of built in Hershey text rending. LEFT (default), CENTER or RIGHT.
@@ -2406,6 +2837,29 @@ public class XYscope {
 	 *            float - vertical position of text
 	 */
 	public void text(String s, float x, float y) {
+		String[] parts = splitTokens(s, "\n\r");
+		
+		switch(textAlignY) {
+		case 101:
+			y += hfactor * 12;
+			break;
+		
+		case 102:
+			y -= hfactor * 21 * parts.length;
+			break;
+		default:
+			y -= hfactor * 21 * parts.length/2;
+			break;
+		}
+		
+		float yOffset = y;
+		for(int i=0; i<parts.length; i++) {
+			textParse(parts[i], x, yOffset);
+			yOffset += hfactor * hheight + hleading;
+		}
+	}
+	
+	public void textParse(String s, float x, float y) {
 //		PVector ta = textOffset(s, x, y);
 		
 		x += 5 * hfactor;
@@ -2432,7 +2886,7 @@ public class XYscope {
 		myParent.pushMatrix();		
 		myParent.translate(x, y);
 		
-		for (int i=0; i<s.length (); i++){
+		for (int i=0; i<s.length(); i++){
 			draw_character(s.charAt(i)); // custom drawChar for XYscope
 		}
 		myParent.popMatrix();
@@ -2467,6 +2921,19 @@ public class XYscope {
 	 * @return float
 	 */	
 	public float textWidth(String s) {
+		String[] parts = splitTokens(s, "\n\r");
+		
+		float offxMax = 0;
+		for(int i=0; i<parts.length; i++) {
+			float offxTemp = textWidthParse(parts[i]);
+			if(offxTemp > offxMax) {
+				offxMax = offxTemp;
+			}
+		}
+		return offxMax;
+	}
+	
+	float textWidthParse(String s) {
 		float offx = 0;
 		for (int k=0; k<s.length (); k++){
 			int c = s.charAt(k);
@@ -2495,7 +2962,40 @@ public class XYscope {
 	 * @return 2D-Array of <PVector>
 	 */
 	public PVector[][] textPaths(String s, float x, float y) {
-		ArrayList<ArrayList<PVector>> coords = new ArrayList(s.length());
+		String[] parts = splitTokens(s, "\n\r");
+		
+		switch(textAlignY) {
+		case 101:
+			y += hfactor * 12;
+			break;
+		
+		case 102:
+			y -= hfactor * 21 * parts.length;
+			break;
+		default:
+			y -= hfactor * 21 * parts.length/2;
+			break;
+		}
+		
+		ArrayList<ArrayList<PVector>> cooords = new ArrayList(s.length());
+		float yOffset = y;
+		for(int i=0; i<parts.length; i++) {
+			textPathsParse(parts[i], x, yOffset, cooords);
+			yOffset += hfactor * hheight + hleading;
+		}
+		
+		PVector[][] coordsArray = new PVector[cooords.size()][];
+		for(int i=0; i < cooords.size(); i++) {
+			coordsArray[i] = new PVector[cooords.get(i).size()];
+			for(int j=0; j < cooords.get(i).size(); j++) {
+				coordsArray[i][j] = cooords.get(i).get(j);
+			}
+		}
+
+		return coordsArray;	
+	}
+	
+	void textPathsParse(String s, float x, float y, ArrayList<ArrayList<PVector>> coords) {
 		
 		x += 5 * hfactor;
 		
@@ -2505,16 +3005,6 @@ public class XYscope {
 			break;
 		case 39:
 			x -= textWidth(s);
-			break;
-		}
-		
-		switch(textAlignY) {
-		case 101:
-			y += hfactor * 12;
-			break;
-		
-		case 102:
-			y -= hfactor * 12;
 			break;
 		}
 		
@@ -2546,16 +3036,6 @@ public class XYscope {
 			}
 			offx += h_width + 5 * hfactor;
 		}
-
-		PVector[][] coordsArray = new PVector[coords.size()][];
-		for(int i=0; i < coords.size(); i++) {
-			coordsArray[i] = new PVector[coords.get(i).size()];
-			for(int j=0; j < coords.get(i).size(); j++) {
-				coordsArray[i][j] = coords.get(i).get(j);
-			}
-		}
-
-		return coordsArray;
 	}
 
 	private void draw_character(int c) {
