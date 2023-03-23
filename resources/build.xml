@@ -246,6 +246,9 @@ ${line}
 	  	<copy todir="${project.dist.version}/web">
   			<fileset dir="${project.web}" />
 	  	</copy>
+	  	<copy todir="${project.dist.version}/reference">
+  			<fileset dir="${project.web}" />
+	  	</copy>
 	  	
 	  	<antcall target="parse.file"><param name="file" value="${project.dist.version}/web/index.html"/></antcall>
 		

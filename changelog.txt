@@ -17,7 +17,7 @@ XYScope 3.0.0 (REV 5) - 21.02.2023
 + primitives can be called without params for quick test, ie xy.circle()
 + audio recorder, to save visuals as .wav!
 + lots of new demos, sharing tricks/tips from past years playing with it
-
++ newly designed references as tutorial website
 
 * ellipse() + rect() now work with 3 params like Processing
 * ellipse()/circle() fixed connecting point
@@ -25,6 +25,8 @@ XYScope 3.0.0 (REV 5) - 21.02.2023
 * more functions accept float for random/sin play
 * limitPath() improved to only draw necessary vector points
 * endShape() now has CLOSE
+* drawXY(), drawPath(), drawAudio(), accept r,g,b values for custom coloring
+* ellipseDetail() abs() for negative numbers
 
 
 ////////////////////////////////////////////////////////////
