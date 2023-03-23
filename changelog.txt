@@ -3,20 +3,28 @@
 - removed
 
 ////////////////////////////////////////////////////////////
-XYScope 2.3.0 (REV 5) - 21.02.2023
+XYScope 3.0.0 (REV 5) - 21.02.2023
 
 + NEWER & IMPROVEDER buildWaves() technique (added -3, to those who like previous)
-+ Added Hershey Fonts (single line) w/ many functions (textFont, textSize, textAlign, textPaths, textWidth, 
++ Added Hershey Fonts (single line) w/ many functions (textFont, textSize, textAlign, textPaths, textWidth, textLeading, multi-line text, ...)
 + Added circle() + square() to match p5/Processing
 + Added steps() for multiplier of segments between points
 + resetWaves() alias of waveReset(), to keep style of clearWaves() and buildWaves()
 + XYZ WaveTables are public to grab values for other usage
 + pan(left, right) to swap pans of channels incase cables physically swapped
++ box(), sphere(), ellipsoid(), torus() 3D primitives added
++ lissajous(), to draw such forms
++ primitives can be called without params for quick test, ie xy.circle()
++ audio recorder, to save visuals as .wav!
++ lots of new demos, sharing tricks/tips from past years playing with it
 
 
 * ellipse() + rect() now work with 3 params like Processing
 * ellipse()/circle() fixed connecting point
 * point() fixed 
+* more functions accept float for random/sin play
+* limitPath() improved to only draw necessary vector points
+* endShape() now has CLOSE
 
 
 ////////////////////////////////////////////////////////////

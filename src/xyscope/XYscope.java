@@ -76,11 +76,11 @@ public class XYscope {
 	int waveSizeVal = bufferSize;
 	int waveSizeValOG = waveSizeVal;
 	int maxPoints = waveSizeValOG;
-	public float[] shapeY = new float[waveSizeVal];
 	public float[] shapeX = new float[waveSizeVal];
+	public float[] shapeY = new float[waveSizeVal];
 	public float[] shapeZ = new float[waveSizeVal];
-	float[] shapePreY = new float[waveSizeVal];
 	float[] shapePreX = new float[waveSizeVal];
+	float[] shapePreY = new float[waveSizeVal];
 	float[] shapePreZ = new float[waveSizeVal];
 	
 	boolean debugWave = false;
@@ -161,7 +161,6 @@ public class XYscope {
 	 * @param theParent
 	 *            PApplet to apply to, typically 'this'
 	 */
-	// * @example basic_shapes
 	public XYscope(PApplet theParent) {
 		myParent = theParent;
 		welcome();
@@ -1065,7 +1064,7 @@ public class XYscope {
 
 	/**
 	 * Enable/Disable easing transitions from one set of buildWaves() to the
-	 * next. Default is false.
+	 * next. Default is false. Deprecated in v2.0+
 	 * 
 	 * @param easeBool
 	 *            true/false
@@ -1076,6 +1075,7 @@ public class XYscope {
 
 	/**
 	 * Check if easing between each frame of buildWaves() is enabled.
+	 * Deprecated in v2.0+
 	 * 
 	 * @return boolean
 	 */
@@ -1084,7 +1084,7 @@ public class XYscope {
 	}
 
 	/**
-	 * Returns current easeAmount, 0.0 - 1.0.
+	 * Returns current easeAmount, 0.0 - 1.0. Deprecated in v2.0+
 	 * 
 	 * @return float
 	 */
@@ -1093,7 +1093,7 @@ public class XYscope {
 	}
 
 	/**
-	 * Set new easing value for speed between buildWave() transitions.
+	 * Set new easing value for speed between buildWave() transitions. Deprecated in v2.0+
 	 * 
 	 * @param newEaseValue
 	 *            float between 0.0 - 1.0
@@ -1296,10 +1296,10 @@ public class XYscope {
 
 							tfx[i] = map(tc.x, 0f, 1f, -1f, 1f);
 							tfy[i] = map(tc.y, 0f, 1f, 1f, -1f);
-							tfz[i] = zaxisMax;
+							tfz[i] = zaxisMin;
 
 							if(tc.z == 1f)
-								tfz[i] = zaxisMin;
+								tfz[i] = zaxisMax;
 
 							float tfxx = tfx[i];
 							float tfyy = tfy[i];
@@ -1421,6 +1421,11 @@ public class XYscope {
 				tableY.smooth(smoothVal);
 			}
 		}
+	}
+	
+	public void setWaveforms(float[] mfx, float[] mfy) {
+		float[] mfz = new float[0];
+		setWaveforms(mfx, mfy, mfz);
 	}
 	
 	public void setWaveforms(float[] mfx, float[] mfy, float[] mfz) {
@@ -1626,7 +1631,7 @@ public class XYscope {
 	}
 
 	/**
-	 * Check if waveform smoothing is enabled/disabled.
+	 * Check if waveform smoothing is enabled/disabled. Deprecated since v3
 	 * 
 	 * @return boolean
 	 */
@@ -1636,7 +1641,7 @@ public class XYscope {
 
 	/**
 	 * Enable/disable Smooth waveforms to reduce visibility of points in
-	 * drawing. Default is false (not applied since revision 3).
+	 * drawing. Default is false. Deprecated since v3
 	 * 
 	 * @param smoothWavesBool
 	 *            true/false
@@ -1646,8 +1651,7 @@ public class XYscope {
 	}
 
 	/**
-	 * Get number of steps for smoothing waveforms. 
-	 * (not applied since revision 3)
+	 * Get number of steps for smoothing waveforms. Deprecated since v3
 	 * 
 	 * @return int
 	 * 
@@ -1660,8 +1664,7 @@ public class XYscope {
 	}
 
 	/**
-	 * Set number of steps for smoothing waveforms. Default is 12.
-	 * (not applied since revision 3)
+	 * Set number of steps for smoothing waveforms. Default is 12. Deprecated since v3
 	 * 
 	 * @param swAmount
 	 *            new int value for smoothening waveform
@@ -1690,15 +1693,19 @@ public class XYscope {
 		drawXY();
 		drawPoints();
 	}
+	
+	public void drawPath() {
+		drawPath(255, 255, 255);
+	}
 
 	/**
 	 * Draw path of points remapped from normalized values to width + height of
 	 * sketch.
 	 */
-	public void drawPath() {
+	public void drawPath(float r, float g, float b) {
 		myParent.pushStyle();
 		myParent.noFill();
-		myParent.stroke(255);
+		myParent.stroke(r, g, b);
 		myParent.pushMatrix();
 		myParent.beginShape();
 		for (XYShape shape : shapes) {
@@ -1712,14 +1719,18 @@ public class XYscope {
 		myParent.popMatrix();
 		myParent.popStyle();
 	}
+	
+	public void drawPoints() {
+		drawPoints(0, 255, 0);
+	}
 
 	/**
 	 * Draw points (as 3px ellipses) remapped from normalized values to width +
 	 * height of sketch.
 	 */
-	public void drawPoints() {
+	public void drawPoints(float r, float g, float b) {
 		myParent.pushStyle();
-		myParent.fill(0, 255, 0);
+		myParent.fill(r, g, b);
 		myParent.noStroke();
 		myParent.pushMatrix();
 		for (XYShape shape : shapes) {
@@ -1733,14 +1744,18 @@ public class XYscope {
 		myParent.noFill();
 		myParent.popStyle();
 	}
+	
+	public void drawXY() {
+		drawXY(50, 255, 50);
+	}
 
 	/**
 	 * Simulate X-Y mode of oscilloscope output.
 	 */
-	public void drawXY() {
+	public void drawXY(float r, float g, float b) {
 		myParent.pushStyle();
 		myParent.noFill();
-		myParent.stroke(50, 255, 50);
+		myParent.stroke(r, g, b);
 		myParent.pushMatrix();
 		myParent.translate(xyWidth / 2, xyHeight / 2);
 		myParent.beginShape();
@@ -1778,7 +1793,7 @@ public class XYscope {
 			float mx = tableX.value(mouseT) * (float) xyWidth / 2 * amp.x;
 			float my = -tableY.value(mouseT) * (float) xyHeight / 2 * amp.y;
 			myParent.pushStyle();
-			myParent.fill(50, 255, 50);
+			myParent.fill(r, g, b);
 			myParent.noStroke();
 			myParent.ellipse(mx, my, debugSize, debugSize);
 			myParent.popStyle();
@@ -1788,6 +1803,10 @@ public class XYscope {
 		myParent.popStyle();
 	}
 
+	public void drawWaveform(){
+		drawWaveform(50, 50, 255, 255, 50, 50);
+	}
+	
 	/**
 	 * Draw waveform of all XYZ oscillators.
 	 * <ul>
@@ -1796,14 +1815,14 @@ public class XYscope {
 	 * <li>Green: Z</li>
 	 * </ul>
 	 */
-	public void drawWaveform() {
+	public void drawWaveform(float lr, float lg, float lb, float rr, float rg, float rb) {
 		myParent.pushStyle();
 		myParent.noFill();
 		myParent.pushMatrix();
 		myParent.beginShape();
 
 		// X -> L
-		myParent.stroke(50, 50, 255);
+		myParent.stroke(lr, lg, lb);
 		for (int i = 0; i < xyWidth; i++) {
 			myParent.vertex(i, (float) xyHeight * .25f
 					- ((float) xyHeight * .125f) * tableX.value((float) i / (float) xyWidth));
@@ -1811,7 +1830,7 @@ public class XYscope {
 		myParent.endShape();
 
 		// Y -> R
-		myParent.stroke(255, 50, 50);
+		myParent.stroke(rr, rg, rb);
 		myParent.beginShape();
 		for (int i = 0; i < xyWidth; i++) {
 			myParent.vertex(i, (float) xyHeight * .75f
@@ -1829,9 +1848,9 @@ public class XYscope {
 					* tableY.value((float) myParent.mouseX / (float) xyWidth);
 			myParent.pushStyle();
 			myParent.noStroke();
-			myParent.fill(50, 50, 255);
+			myParent.fill(lr, lg, lb);
 			myParent.ellipse(lx - 2, ly, debugSize, debugSize);
-			myParent.fill(255, 50, 50);
+			myParent.fill(rr, rg, rb);
 			myParent.ellipse(lx - 2, ry, debugSize, debugSize);
 			myParent.popStyle();
 		}
@@ -1964,7 +1983,7 @@ public class XYscope {
 	 *            int for facets of ellipse
 	 */
 	public void ellipseDetail(int newED) {
-		ellipseDetail = newED;
+		ellipseDetail = abs(newED);
 	}
 	
 	/**
@@ -1974,7 +1993,7 @@ public class XYscope {
 	 *            float for facets of ellipse (rounded)
 	 */
 	public void ellipseDetail(float newED) {
-		ellipseDetail = round(newED);
+		ellipseDetail = abs(round(newED));
 	}
 
 	/**
@@ -2013,6 +2032,10 @@ public class XYscope {
 		stepsSize = parseInt(newSteps);
 	}
 	
+	// non-params drawing
+	public void point() {
+		line(xyWidth/2, xyHeight/2, xyWidth/2+1, xyHeight/2+1);
+	}
 	
 	/**
 	 * Draw point, expects point(x, y).
@@ -2039,6 +2062,14 @@ public class XYscope {
 	 */
 	public void point(float x, float y, float z) {
 		line(x, y, z, x+1, y+1, z+1);
+	}
+	
+	// non-params drawing
+	public void line() {
+		beginShape();
+		vertex(0, 0);
+		vertex(xyWidth, xyHeight);
+		endShape();
 	}
 
 	/**
@@ -2079,6 +2110,18 @@ public class XYscope {
 		endShape();
 	}
 	
+	// non-params drawing
+		public void square() {
+			int x = xyWidth/2;
+			int y = xyHeight/2;
+			int w = xyHeight;
+			if (rectM == 3) {
+				x -= w / 2;
+				y -= w / 2;
+			}
+			vertexRect(x, y, w, w);
+		}
+	
 	/**
 	 * Draw square, expects square(x, y, extent).
 	 * 
@@ -2095,6 +2138,18 @@ public class XYscope {
 			y -= e / 2;
 		}
 		vertexRect(x, y, e, e);
+	}
+	
+	// non-params drawing
+	public void rect() {
+		int x = xyWidth/2;
+		int y = xyHeight/2;
+		int w = xyHeight;
+		if (rectM == 3) {
+			x -= w / 2;
+			y -= w / 2;
+		}
+		vertexRect(x, y, w, w);
 	}
 	
 	/**
@@ -2146,6 +2201,15 @@ public class XYscope {
 		endShape();
 	}
 	
+	// non-params drawing
+	public void circle() {
+		vertexEllipse(xyWidth/2, xyHeight/2, xyHeight, xyHeight);
+	}
+	
+	public void ellipse() {
+		vertexEllipse(xyWidth/2, xyHeight/2, xyHeight, xyHeight);
+	}
+	
 	/**
 	 * Draw circle (ellipse), expects circle(x, y, extent).
 	 * 
@@ -2193,7 +2257,7 @@ public class XYscope {
 	// based on
 	// http://stackoverflow.com/questions/5886628/effecient-way-to-draw-ellipse-with-opengl-or-d3d
 	private void vertexEllipse(float cx, float cy, float rx, float ry) {
-		float theta = 2f * PI / (float) ellipseDetail;
+		float theta = TWO_PI / (float) ellipseDetail;
 		float c = cos(theta);// precalculate the sine and cosine
 		float s = sin(theta);
 		float t;
@@ -2212,6 +2276,11 @@ public class XYscope {
 
 		}
 		endShape();
+	}
+	
+	// non-param drawings
+	public void lissajous(){
+		lissajous(xyWidth/2, xyHeight/2, xyHeight/2, 1, 2, 0, 180);
 	}
 	
 	/**
@@ -2236,6 +2305,10 @@ public class XYscope {
 			vertex(xPos + x, yPos + y);
 		}
 		endShape();
+	}
+	
+	public void box() {
+		box(xyHeight/2, xyHeight/2, xyHeight/2);
 	}
 
 	/**
@@ -2324,6 +2397,15 @@ public class XYscope {
 	// based on: Examples » Topics » Textures » Texture Sphere
 	int dx = 24;
 	int dy = 24;
+	
+	// non-param drawing
+	public void sphere() {
+		ellipsoid(xyHeight/3, xyHeight/3, xyHeight/3, dx, dy);
+	}
+	
+	public void ellipsoid() {
+		ellipsoid(xyHeight/3, xyHeight/3, xyHeight/3, dx, dy);
+	}
 	
 	/**
 	 * Draw sphere, expects sphere(size).
@@ -2477,6 +2559,11 @@ public class XYscope {
 		endShape();
 	}
 	
+	// non-param drawing
+	public void torus() {
+		torus(xyHeight/4, xyHeight/6, dx, dy);
+	}
+	
 	public void torus(float radius, float tubeRadius) {
 		torus(radius, tubeRadius, dx, dy);
 	}
@@ -2544,6 +2631,14 @@ public class XYscope {
 	public void beginShape() {
 		currentShape = new XYShape();
 		shapes.add(currentShape);
+	}
+	
+	public void vertex() {
+		vertex(new PVector(myParent.random(xyWidth), myParent.random(xyHeight), 0), false);
+	}
+	
+	public void curveVertex() {
+		vertex(new PVector(myParent.random(xyWidth), myParent.random(xyHeight), 0), false);
 	}
 
 	/**
@@ -2664,8 +2759,10 @@ public class XYscope {
 	 */
 	public void endShape(int close) {
 		if(close == 2) {
-			PVector lastC = currentShape.get(0);
-			currentShape.add(new PVector(lastC.x, lastC.y, 0));
+			if(currentShape.size() > 0) {
+				PVector lastC = currentShape.get(0);
+				currentShape.add(new PVector(lastC.x, lastC.y, 0));
+			}
 		}
 		endShape();
 //		// not necessary in current setup. maybe useful later for z-axis
@@ -2826,6 +2923,19 @@ public class XYscope {
 		}
 	}
 	
+	// non-param drawing
+	public void text() {
+		text("XYscope", xyWidth/2, xyHeight/2);
+	}
+	
+	public void text(float s, float x, float y) {
+		text(nf(s), x, y);
+	}
+	public void text(int s, float x, float y) {
+		text(nf(s), x, y);
+	}
+	
+	
 	/**
 	 * Render text using built in Hershey Fonts. 
 	 * 
@@ -2848,7 +2958,9 @@ public class XYscope {
 			y -= hfactor * 21 * parts.length;
 			break;
 		default:
-			y -= hfactor * 21 * parts.length/2;
+			if(parts.length > 1) {
+				y -= hfactor * 21 * parts.length/2;
+			}
 			break;
 		}
 		
