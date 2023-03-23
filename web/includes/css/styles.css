@@ -1,0 +1,90 @@
+@font-face {
+  font-family: 'roboto_mono';
+  src: url('../fonts/robotomono-regular-webfont.woff2') format('woff2'),
+  url('../fonts/robotomono-regular-webfont.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'roboto_mono';
+  src: url('../fonts/robotomono-light-webfont.woff2') format('woff2'),
+  url('../fonts/robotomono-light-webfont.woff') format('woff');
+  font-weight: 200;
+  font-style: normal;
+}
+
+body {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 25px;
+  color: #333333;
+  font-family: "roboto_mono", sans-serif;
+  font-size: 11pt;
+  line-height: 1.5em;
+  font-weight:200;
+}
+
+a{
+  color:#000;
+}
+a:visited{
+  color:#666;
+}
+
+li{
+  line-height:2em;
+}
+
+h1, h2{
+    padding:8px 0 8px 0;
+}
+
+h1 {
+  line-height: 1;
+  font-weight:400;
+  border-bottom: solid 2px #000;
+  border-top: solid 2px #000;
+}
+
+h2 {
+  font-size:22pt;
+  border-top: solid 1px #000;
+  border-bottom: solid 1px #000;
+  margin-top:50px;
+}
+
+h3 {
+  font-size:18pt;
+  margin-top:35px;
+  margin-bottom:0;
+  text-decoration: underline;
+}
+
+h4 {
+  font-size:14pt;
+  margin-top:20px;
+  margin-bottom:0;
+}
+
+hr{
+  border:none;
+  border-bottom:1px dotted #000;
+  margin-top:20px;
+}
+
+pre > code{
+  border-radius: 5px;
+  border:1px solid #ddd !important;
+  background: #fafafa !important;
+  display: inline-block;
+  padding: 0 8px;
+  font-family: "roboto_mono";
+  font-weight: 400;
+}
+
+blockquote p{
+  background:#fafafa;
+  border-left:3px solid #aaa;
+  padding:5px;
+  font-weight:400;
+}

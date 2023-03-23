@@ -1,0 +1,1163 @@
+<html lang="en"><head>
+	<meta charset="utf-8">
+	<title>XYscope</title>
+	<link rel="stylesheet" href="includes/css/styles.css">
+	<link rel="stylesheet" href="includes/js/highlight/docco.css">
+	<script src="includes/js/highlight/highlight.pack.js"></script>
+	<style type="text/css">
+		#spacer{
+			position: relative;
+			height: 100vh;
+		}
+		canvas{
+			position:fixed;
+			top:0;
+			left:0;
+			z-index:-1;
+			width:100vw;
+			height:100vh;
+			margin:0;
+		}
+		code{
+			background:#fafafa;
+			border:1px solid #ddd;
+			border-radius:3px;
+			padding:3px;
+		}
+	</style>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+</head>
+<body>
+	<div id="md"><h1 id="xyscope" name="xyscope">XYscope</h1>
+<p>v 3.0.0<br>
+cc <a href="https://teddavis.org" target="_blank">teddavis.org</a> 2017 – 2023</p>
+<p>Processing library to render graphics on analog vector displays.</p>
+<p>XYscope converts the coordinates of primative shapes (point, line, rect, ellipse, vertex, box, sphere, torus...)to audio waveforms (oscillators with custom wavetables) which are sent to an analog display, revealing their graphics. This process of generating real-time audio from vector drawings is built upon the amazing Minim library. Vector graphics shine on a vector display and now we can view our generative works like never before! Tested on MacOS, Windows, Linux (RPi!).</p>
+<p><a href="http://www.teddavis.org/xyscope" target="_blank">teddavis.org/xyscope</a><br>
+<a href="https://github.com/ffd8/xyscope" target="_blank">github.com/ffd8/xyscope</a></p>
+<h2 id="table-of-contents" name="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#audio-interfaces">Audio Interfaces</a></li>
+<li><a href="#vector-displays">Vector Displays</a></li>
+<li><a href="#getting-started">Getting Started</a></li>
+<li><a href="#additive-synthesis">Additive Synthesis</a></li>
+<li><a href="#references">References</a></li>
+<li><a href="#extras">Extras </a></li>
+</ul>
+<h2 id="installation" name="installation">Installation</h2>
+<p>Add via Processing's Library Manager:</p>
+<ul>
+<li>Sketch menu » Import Library... » Add Library... (v4 Manage Libraries...)</li>
+<li>Search for 'XYscope' and click <code>Install</code>.</li>
+<li>Search for 'Minim' and click <code>Install</code>.</li>
+</ul>
+<p>This library relies on and is infinitely thankful for <a href="https://github.com/ddf/Minim" target="_blank">Minim</a>!<br>
+Search for and add the following libraries for various examples:<br>
+<a href="https://github.com/rikrd/geomerative" target="_blank">Geomerative</a>, <a href="https://github.com/atduskgreg/opencv-processing" target="_blank">OpenCV for Processing</a>, <a href="https://github.com/shiffman/OpenKinect-for-Processing" target="_blank">openkinect</a>, <a href="https://github.com/processing/processing-video" target="_blank">video</a>, <a href="https://github.com/Syphon/Processing" target="_blank">syphon</a></p>
+<p>Add manually, <a href="https://github.com/ffd8/xyscope/releases/latest" target="_blank">download latest release</a> and expand into <code>~/Processing/libraries</code>:</p>
+<h2 id="audio-interfaces" name="audio-interfaces">Audio Interfaces</h2>
+<p><em>&lt; $5</em><br>
+At the very least you can use your computer's headphone jack with an <a href="https://duckduckgo.com/?q=1%2F8%22+to+RCA&amp;t=h_&amp;iax=images&amp;ia=images" target="_blank"><code>1/8" to RCA</code></a> cable. However you'll soon want to get a <a href="https://www.expert-sleepers.co.uk/siwacompatibility.html" target="_blank">DC-Coupled</a> audio interface for a cleaner and more stable visual (not wobbling/centering constantly).</p>
+<p><em>&lt; $20</em><br>
+For workshops I like to use some variant of the 48Khz <a href="https://www.delock.com/produkt/61645/merkmale.html" target="_blank">Delock 61645</a> or 96Khz <a href="https://www.delock.com/produkt/63926/merkmale.html" target="_blank">Delock 63926</a> – you'll find the same chip under many different brands and casings. For modern laptops, there's also a very compact 96Khz <a href="https://www.delock.com/produkt/66304/merkmale.html" target="_blank">Delock USB-C</a> version.</p>
+<p><em>&gt; $150+</em><br>
+Many of us in the community found the <a href="https://motu.com/products/motuaudio/ultralite-mk3" target="_blank">MOTU Ultralite Mk3 Hybrid</a> (or newer versions) to be an ideal audio interface. Price varies from used to new. It offers, 10-channels of DC-Coupled 196Khz output, which is useful to drive multiple oscilloscopes or RGB lasers (X, Y, R, G, B).</p>
+<h3 id="list" name="list">List</h3>
+<p>Check which interface is plugged in and how to reference it.</p>
+<pre><code class="hljs javascript">xy.getMixerInfo(); <span class="hljs-comment">// lists available audio devices</span>
+</code></pre>
+<h3 id="select" name="select">Select</h3>
+<p>By default XYscope uses the system settings audio-output, however we can specify a custom sound card (Digital Analog Converter – DAC) and sample rate.</p>
+<pre><code class="hljs javascript">xy = <span class="hljs-keyword">new</span> XYscope(<span class="hljs-keyword">this</span>); <span class="hljs-comment">// system settings soundcard </span>
+xy = <span class="hljs-keyword">new</span> XYscope(<span class="hljs-keyword">this</span>, <span class="hljs-string">"MOTU 1_2"</span>); <span class="hljs-comment">// specify a soundcard/channel to use </span>
+xy = <span class="hljs-keyword">new</span> XYscope(<span class="hljs-keyword">this</span>, <span class="hljs-number">96000</span>); <span class="hljs-comment">// custom sample rate ( &gt; finer detail if card supports) </span>
+xy = <span class="hljs-keyword">new</span> XYscope(<span class="hljs-keyword">this</span>, <span class="hljs-string">"MOTU 1_2"</span>, <span class="hljs-number">96000</span>); <span class="hljs-comment">// custom soundcard, custom sample rate </span>
+</code></pre>
+<p>Or select a previous XYscope instance as the output for additive-synthesis:</p>
+<pre><code class="hljs javascript">xy2 = <span class="hljs-keyword">new</span> XYscope(<span class="hljs-keyword">this</span>, xy.outXY); <span class="hljs-comment">// send 2nd instance to 1st</span>
+</code></pre>
+<h3 id="aggregate-device" name="aggregate-device">Aggregate Device</h3>
+<p>If you have a multi-channel DAC, we need to create multiple 2ch stereo pairs, since Processing/Minim can't handel multi-channel devices. Especially useful with a great DAC like the MOTU Ultralite Mk3 Hybrid (or newer), offering 10ch of DC-Coupled outputs, so one could control 5 oscillscopes at once! Have only tested using MacOS:</p>
+<ul>
+<li>Press <code>CMD + Spacebar</code> (opens Spotlight Search)</li>
+<li>Type <code>Audio Midi Setup</code>, press <code>ENTER</code></li>
+<li>Click <code>+</code> in lower left, select <code>Create Aggregate Device</code></li>
+<li>Tick checkbox of your multi-channel audio device</li>
+<li>Click <code>Configure Speakers...</code> in lower right</li>
+<li>Set configuration to <code>Stereo</code>, select channels desired</li>
+<li>Rename to something like: <code>MOTU 1_2</code></li>
+<li>Repeat above for each stereo pair, ie, <code>MOTU 3_4</code>, <code>MOTU 5_6</code>...</li>
+<li>They can now be selected by name when initializing XYscope!</li>
+</ul>
+<h3 id="multi-channel-output-device" name="multi-channel-output-device">Multi-Channel Output Device</h3>
+<p>Within <code>Audio Midi Setup</code>, you can <code>Create Multi-Output Device</code> to send your output to multiple devices, ie. <a href="https://existential.audio/blackhole/" target="_blank">Blackhole</a> + DAC + Speakers, so you can view it <a href="https://www.oscilloscopemusic.com/software/oscilloscope/" target="_blank">virtually</a>, on analog device, and hear it.</p>
+<ul>
+<li>Press <code>CMD + Spacebar</code> (opens Spotlight Search)</li>
+<li>Type <code>Audio Midi Setup</code>, press <code>ENTER</code></li>
+<li>Click <code>+</code> in lower left, select <code>Create Multi-Channel Device</code></li>
+<li>Tick checkbox of best device first, then select additional</li>
+<li>Set sample rate to highest available, 48000 or 96000+</li>
+<li>Rename for clarity, ie <code>DAC + SPEAKERS</code> or <code>BLACKHOLE + SPEAKERS</code>.</li>
+</ul>
+<h2 id="vector-displays" name="vector-displays">Vector Displays</h2>
+<p>Now we need a vector display to see our glowing output!</p>
+<h3 id="virtual" name="virtual">Virtual</h3>
+<p><a href="https://www.oscilloscopemusic.com/software/oscilloscope/" target="_blank">Oscilloscope</a> by Hansi Raber (adopting <a href="http://m1el.github.io/woscope-how/" target="_blank">m1el's woscope</a> 'physical rendering') is a fantastic way to see your XYscope drawings while on the go without a physical device. You'll want to install <a href="https://existential.audio/blackhole/" target="_blank">Blackhole</a> (MacOS) or <a href="https://vb-audio.com/Cable/index.htm" target="_blank">VB-CABLE</a> (Windows) to re-route your system audio to a virtual source for Oscilloscope to render it.</p>
+<h3 id="analog-oscilloscope" name="analog-oscilloscope">Analog Oscilloscope</h3>
+<p>This is what we really want! They have a Cathode-ray Tube (CRT) that is the magic behind this obsession. You'll find them for ~$50 used on auction websites – be sure it has 2-channels (z-axis input is a bonus) and that they show images of a sharp working beam. You'll need a few <a href="https://duckduckgo.com/?q=RCA+to+BNC&amp;t=h_&amp;iar=images&amp;iax=images&amp;ia=images" target="_blank"><code>RCA to BNC</code></a> adaptors to interface with it. Have fun playing with all the knobs to put it into <code>XY Mode</code> so that the 2-channels drive the beam X/Y (Horizontal/Vertical).</p>
+<h3 id="x-y-monitor" name="x-y-monitor">X-Y Monitor</h3>
+<p>Similar to an analog oscilloscope, but usually has a larger display and reduced controls for X-Y (+Z) input, leaving away many of the features on an oscilloscope we won't use. They're more rare, expensive, but great if you stumble upon one. Don't confuse these with a 'vector monitor' which is used for TV broadcast and won't draw X-Y coordinates.</p>
+<h3 id="vectrex" name="vectrex">Vectrex</h3>
+<p>A vector-graphics video game system of the 1980s, these amazing 9" displays can be <a href="http://users.sussex.ac.uk/~ad207/adweb/assets/vectrexminijackinputmod2014.pdf" target="_blank">very carefully modified</a> (<strong>CAREFUL - at own risk</strong>) to override (on-demand) the videogame control of the monitor's XYZ inputs. It's ideal to use <a href="https://www.youtube.com/watch?v=q3sKZA2r7qk" target="_blank">switching jacks</a> so videogames still works when cables are unplugged. You'll also want to apply the <a href="https://www.facebook.com/groups/vectorsynthesis/posts/832237263652516/" target="_blank">SPOT KILLER MOD</a>, but BE SURE to apply an appropriately high-voltage rated switch, so it can be toggled on and off.</p>
+<p>XYscope has a special mode when using a Vectrex for the aspect ratio. See example <code>vextrex</code> within <code>5_displays</code>, but the main notes are:</p>
+<pre><code class="hljs javascript"><span class="hljs-comment">/* within setup() */</span>
+xy.vectrex(<span class="hljs-number">90</span>); <span class="hljs-comment">// -90/90 for landscape, 0 for portrait</span>
+
+<span class="hljs-comment">// optionally z-axis for blanking</span>
+xy.z(<span class="hljs-string">"MOTU 3-4"</span>); <span class="hljs-comment">// use custom 3rd channel for z-axis</span>
+<span class="hljs-comment">//xy.zRange(.5, 0); // set min/max values for beam on/off</span>
+</code></pre>
+<h3 id="laser" name="laser">Laser</h3>
+<p>Once you want something bigger than most screens, you'll want to move to an RGB Laser. They're BIG and BRIGHT, but also much slower and more dangerous! It's slower because it mechanically moves galvos/mirrors for the X-Y and dangerous, because, LASERS! Nevertheless, they can be controlled via the ILDA analog input, for which I've developed an easy to build <a href="https://github.com/ffd8/dac_ilda" target="_blank">dac_ilda adaptor</a>. To control a laser, you'll need a DAC (sound card) with a minimum of 5-channels, for sending <code>X, Y, R, G, B</code> signals. See example <code>laser</code> within <code>5_displays</code>, but the main notes are:</p>
+<pre><code class="hljs javascript"><span class="hljs-comment">/* within setup() */</span>
+<span class="hljs-comment">// only stereo pairs in processing, so it's broken to R, GB</span>
+<span class="hljs-comment">// incase 2nd channel of R pair is useful for blanking/etc.</span>
+xy.laser(<span class="hljs-string">"MOTU 3-4"</span>, <span class="hljs-string">"MOTU 5-6"</span>); <span class="hljs-comment">//xy.laser(mixerR, mixerGB);</span>
+
+<span class="hljs-comment">/* within setup() or draw() */</span>
+<span class="hljs-comment">// RGB waveforms have own freq, so we can them out of sync</span>
+xy.strokeFreq(<span class="hljs-number">50.05</span>, <span class="hljs-number">50.1</span>, <span class="hljs-number">50.2</span>);
+  
+xy.strokeDash(<span class="hljs-number">8</span>); <span class="hljs-comment">// optional dashes in the RGB stroke</span>
+
+xy.stroke(<span class="hljs-number">0</span>, <span class="hljs-number">255</span>, <span class="hljs-number">255</span>); <span class="hljs-comment">// set RGB stroke before shapes (0-255)</span>
+
+xy.limitPath(<span class="hljs-number">0</span>); <span class="hljs-comment">// avoid drawing any forms beyond view</span>
+</code></pre>
+<h2 id="getting-started" name="getting-started">Getting Started</h2>
+<p>Our basic template for an XYscope sketch involves:</p>
+<pre><code class="hljs javascript"><span class="hljs-keyword">import</span> ddf.minim.*; <span class="hljs-comment">// minim req to gen audio</span>
+<span class="hljs-keyword">import</span> xyscope.*;   <span class="hljs-comment">// import XYscope</span>
+XYscope xy;         <span class="hljs-comment">// create XYscope instance</span>
+ 
+<span class="hljs-keyword">void</span> <span class="hljs-keyword">set</span><span class="hljs-title">up</span>(){ 
+  size(<span class="hljs-number">512</span>, <span class="hljs-number">512</span>); <span class="hljs-comment">// window size, optionally add P3D</span>
+ 
+  xy = <span class="hljs-keyword">new</span> XYscope(<span class="hljs-keyword">this</span>, <span class="hljs-string">""</span>); <span class="hljs-comment">// define XYscope instance, "custom_dac" optional</span>
+  xy.getMixerInfo(); <span class="hljs-comment">// lists all audio devices</span>
+} 
+ 
+<span class="hljs-keyword">void</span> draw(){ 
+  background(<span class="hljs-number">0</span>); 
+  xy.clearWaves();  <span class="hljs-comment">// clear waves from previous drawing</span>
+  
+  <span class="hljs-comment">// draw shapes here</span>
+  xy.circle(width/<span class="hljs-number">2</span>, height/<span class="hljs-number">2</span>, width); <span class="hljs-comment">// it all began with a circle....</span>
+  
+  xy.buildWaves(); <span class="hljs-comment">// build shapes to audio waves</span>
+  xy.drawAll();
+} 
+</code></pre>
+<h2 id="additive-synthesis" name="additive-synthesis">Additive Synthesis</h2>
+<p>Something very unique to this workflow is sending multiple audio signals to the oscilloscope, which interfer and modulate one another. As these waves combine, their amp and freq determine its influence on other waves. Key is having different frequencies and amplitudes to modulate off one another. The lower the frequency, the more it will push other waves around. The lower the amp, the less influence it has on the additive waveform. We can simply open two sketches, both being sent to the same sound card to see this in action, however we can also achieve it within a single sketch.</p>
+<pre><code class="hljs javascript"><span class="hljs-keyword">import</span> ddf.minim.*; <span class="hljs-comment">// minim req to gen audio</span>
+<span class="hljs-keyword">import</span> xyscope.*;   <span class="hljs-comment">// import XYscope</span>
+XYscope xy, xy2;    <span class="hljs-comment">// create 2x XYscope instances</span>
+
+<span class="hljs-keyword">void</span> <span class="hljs-keyword">set</span><span class="hljs-title">up</span>() {
+  size(<span class="hljs-number">512</span>, <span class="hljs-number">512</span>); <span class="hljs-comment">// declares size of output window</span>
+  xy = <span class="hljs-keyword">new</span> XYscope(<span class="hljs-keyword">this</span>);
+  xy2 = <span class="hljs-keyword">new</span> XYscope(<span class="hljs-keyword">this</span>, xy.outXY); <span class="hljs-comment">// patch 2nd instance to 1st output</span>
+}
+
+<span class="hljs-keyword">void</span> draw() {
+  background(<span class="hljs-number">0</span>);
+  <span class="hljs-comment">// set main shapes</span>
+  xy.clearWaves();
+  xy.circle(width/<span class="hljs-number">2</span>, height/<span class="hljs-number">2</span>, width/<span class="hljs-number">2</span>);
+  xy.buildWaves();
+  xy.drawPath(<span class="hljs-number">0</span>, <span class="hljs-number">255</span>, <span class="hljs-number">255</span>); <span class="hljs-comment">// custom stroke color</span>
+  xy.drawXY(); <span class="hljs-comment">// displays combined output</span>
+
+  <span class="hljs-comment">// additive synth on 2nd instance of XYscope</span>
+  xy2.clearWaves();
+  xy2.freq(mouseX); <span class="hljs-comment">// without speakers, test really high freqs!</span>
+  <span class="hljs-comment">//xy2.amp(.2); // experiment with high freq, low amp modulation</span>
+  xy2.circle(width/<span class="hljs-number">2</span>, height/<span class="hljs-number">2</span>, mouseY);
+  xy2.buildWaves();
+  xy2.drawPath(<span class="hljs-number">255</span>, <span class="hljs-number">255</span>, <span class="hljs-number">0</span>); <span class="hljs-comment">// custom stroke color</span>
+}
+</code></pre>
+<p>Additional tips:</p>
+<ul>
+<li>No need to stop at just 2, add as many as needed!</li>
+<li>Ratio between freqs is crucial, diff of +/- .1 animates things.</li>
+<li>Really low frequencies animate shapes over that path.</li>
+<li>Really high frequencies display shape made of 2nd shape.</li>
+<li>Play with position of 2nd shape, from center to corners.</li>
+</ul>
+<h2 id="references" name="references">References</h2>
+<p>XYscope is a class, so after an instance has been defined to a variable, we'll use that prefix in front of every function listed below, ie: <code>xy.ellipse()</code>. This enables us to have multiple XYscope instances running parallel, which will reveal wild and crazy audio/visuals. All examples below use <code>xy</code> as the instance prefix.</p>
+<ul>
+<li><a href="#initialize-xyscope">Initialize XYscope</a></li>
+<li><a href="#z-axis">Z-axis</a>
+<ul>
+<li><a href="#z()">z()</a></li>
+<li><a href="#zauto()">zAuto()</a></li>
+</ul></li>
+<li><a href="#audio-interface-settings">Audio Interface Settings</a>
+<ul>
+<li><a href="#getmixerinfo()">getMixerInfo()</a></li>
+<li><a href="#samplerate()">sampleRate()</a></li>
+<li><a href="#buffersize()">bufferSize()</a></li>
+</ul></li>
+<li><a href="#waves">Waves</a>
+<ul>
+<li><a href="#resetwaves()">resetWaves()</a></li>
+<li><a href="#clearwaves()">clearWaves()</a></li>
+<li><a href="#buildwaves()">buildWaves()</a></li>
+<li><a href="#buildx()">buildX()</a></li>
+<li><a href="#buildy()">buildY()</a></li>
+<li><a href="#buildz()">buildZ()</a></li>
+<li><a href="#wavesize()">waveSize()</a></li>
+<li><a href="#setwaveforms()">setWaveforms()</a></li>
+</ul></li>
+<li><a href="#points">Points</a>
+<ul>
+<li><a href="#wavepoints()">wavePoints()</a></li>
+<li><a href="#steps()">steps()</a></li>
+<li><a href="#limitpoints()">limitPoints()</a></li>
+<li><a href="#limitpath()">limitPath()</a></li>
+</ul></li>
+<li><a href="#record-audio">Record Audio</a>
+<ul>
+<li><a href="#recorderbegin()">recorderBegin()</a></li>
+<li><a href="#recorderend()">recorderEnd()</a></li>
+</ul></li>
+<li><a href="#primitive-shapes">Primitive Shapes</a>
+<ul>
+<li><a href="#point()">point()</a></li>
+<li><a href="#line()">line()</a></li>
+<li><a href="#square()">square()</a></li>
+<li><a href="#rect()">rect()</a></li>
+<li><a href="#circle()">circle()</a></li>
+<li><a href="#ellipse()">ellipse()</a></li>
+<li><a href="#complex-shape">complex shape</a></li>
+<li><a href="#lissajous()">lissajous()</a></li>
+<li><a href="#box()">box()</a></li>
+<li><a href="#sphere()">sphere()</a></li>
+<li><a href="#ellipsoid()">ellipsoid()</a></li>
+<li><a href="#torus()">torus()</a></li>
+</ul></li>
+<li><a href="#text">Text</a>
+<ul>
+<li><a href="#text()">text()</a></li>
+<li><a href="#textpaths()">textPaths()</a></li>
+<li><a href="#textfont()">textFont()</a></li>
+<li><a href="#textsize()">textSize()</a></li>
+<li><a href="#textleading()">textLeading()</a></li>
+<li><a href="#textalign()">textAlign()</a></li>
+<li><a href="#textwidth()">textWidth()</a></li>
+</ul></li>
+<li><a href="#modulation">Modulation</a>
+<ul>
+<li><a href="#freq()">freq()</a></li>
+<li><a href="#amp()">amp()</a></li>
+<li><a href="#pan()">pan()</a></li>
+</ul></li>
+<li><a href="#vectrex">Vectrex</a></li>
+<li><a href="#laser">Laser</a></li>
+<li><a href="#rendering">Rendering</a></li>
+<li><a href="#vars">Vars</a></li>
+</ul>
+<hr>
+<h3 id="initialize-xyscope" name="initialize-xyscope">Initialize XYscope</h3>
+<pre><code class="hljs javascript">xy = <span class="hljs-keyword">new</span> XYscope(<span class="hljs-keyword">this</span>); <span class="hljs-comment">// system audio settings</span>
+xy = <span class="hljs-keyword">new</span> XYscope(<span class="hljs-keyword">this</span>, <span class="hljs-string">"custom_dac"</span>); <span class="hljs-comment">// custom audio card</span>
+xy = <span class="hljs-keyword">new</span> XYscope(<span class="hljs-keyword">this</span>, xy_instance.outXY); <span class="hljs-comment">// another XYscope out</span>
+xy = <span class="hljs-keyword">new</span> XYscope(<span class="hljs-keyword">this</span>, sampleRate); <span class="hljs-comment">// default sampleRate is 41000</span>
+xy = <span class="hljs-keyword">new</span> XYscope(<span class="hljs-keyword">this</span>, <span class="hljs-string">"custom_dac"</span>, sampleRate); <span class="hljs-comment">// default sampleRate is 41000</span>
+xy = <span class="hljs-keyword">new</span> XYscope(<span class="hljs-keyword">this</span>, <span class="hljs-string">"custom_dac"</span>, sampleRate, bufferSize); <span class="hljs-comment">// default bufferSize is 512</span>
+</code></pre>
+<hr>
+<h3 id="z-axis" name="z-axis">Z-axis</h3>
+<h4 id="z()" name="z()">z()</h4>
+<pre><code class="hljs javascript">xy.z(<span class="hljs-string">"custom_dac"</span>); <span class="hljs-comment">// set audio out for z-axis (blanking)</span>
+xy.z(<span class="hljs-string">"custom_dac"</span>, sampleRate); <span class="hljs-comment">// add custom sampleRate</span>
+</code></pre>
+<h4 id="zauto()" name="zauto()">zAuto()</h4>
+<pre><code class="hljs javascript"><span class="hljs-comment">// somewhat deprecated.. may return</span>
+xy.zAuto(); <span class="hljs-comment">// get setting for using z-axis</span>
+xy.zAuto(boolean); <span class="hljs-comment">// set auto use of z-axis </span>
+</code></pre>
+<hr>
+<h3 id="audio-interface-settings" name="audio-interface-settings">Audio Interface Settings</h3>
+<h4 id="getmixerinfo()" name="getmixerinfo()">getMixerInfo()</h4>
+<pre><code class="hljs javascript">xy.getMixerInfo(); <span class="hljs-comment">// list connected audio interfaces</span>
+</code></pre>
+<h4 id="samplerate()" name="samplerate()">sampleRate()</h4>
+<pre><code class="hljs javascript">xy.sampleRate(); <span class="hljs-comment">// get current sampleRate, default 41000</span>
+xy.sampleRate(newRate); <span class="hljs-comment">// set new sampleRate (int)</span>
+</code></pre>
+<h4 id="buffersize()" name="buffersize()">bufferSize()</h4>
+<pre><code class="hljs javascript">xy.bufferSize(); <span class="hljs-comment">// get current bufferSize, default 512</span>
+xy.bufferSize(newSize); <span class="hljs-comment">// set  new bufferSize (int)</span>
+</code></pre>
+<hr>
+<h3 id="waves" name="waves">Waves</h3>
+<h4 id="resetwaves()" name="resetwaves()">resetWaves()</h4>
+<pre><code class="hljs javascript">xy.resetWaves(); <span class="hljs-comment">// fix any sync issues with phase of waves</span>
+</code></pre>
+<h4 id="clearwaves()" name="clearwaves()">clearWaves()</h4>
+<pre><code class="hljs javascript">xy.clearWaves(); <span class="hljs-comment">// clear wavetables from any previous drawing</span>
+</code></pre>
+<h4 id="buildwaves()" name="buildwaves()">buildWaves()</h4>
+<pre><code class="hljs javascript">xy.buildWaves(); <span class="hljs-comment">// compile drawn shapes into new wavetables/audio</span>
+xy.buildWaves(<span class="hljs-number">-1</span>); <span class="hljs-comment">// draw in v1 style</span>
+xy.buildWaves(<span class="hljs-number">-2</span>); <span class="hljs-comment">// draw in v2 style</span>
+xy.buildWaves(<span class="hljs-number">-3</span>); <span class="hljs-comment">// draw in v3 style</span>
+</code></pre>
+<h4 id="buildx()" name="buildx()">buildX()</h4>
+<pre><code class="hljs javascript">xy.buildX(newWave); <span class="hljs-comment">// build wavetableX with float[] array</span>
+</code></pre>
+<h4 id="buildy()" name="buildy()">buildY()</h4>
+<pre><code class="hljs javascript">xy.buildY(newWave); <span class="hljs-comment">// build wavetableY with float[] array</span>
+</code></pre>
+<h4 id="buildz()" name="buildz()">buildZ()</h4>
+<pre><code class="hljs javascript">xy.buildZ(newWave); <span class="hljs-comment">// build wavetableZ with float[] array</span>
+</code></pre>
+<h4 id="wavesize()" name="wavesize()">waveSize()</h4>
+<pre><code class="hljs javascript">xy.waveSize(); <span class="hljs-comment">// get current size of wavetables</span>
+xy.waveSize(newSize); <span class="hljs-comment">// set new wavetable size, default is 512 </span>
+</code></pre>
+<h4 id="setwaveforms()" name="setwaveforms()">setWaveforms()</h4>
+<pre><code class="hljs javascript">xy.setWaveforms(wfX, wfY, wfZ); <span class="hljs-comment">// set wavetables with float[] arrays </span>
+</code></pre>
+<hr>
+<h3 id="points" name="points">Points</h3>
+<h4 id="wavepoints()" name="wavepoints()">wavePoints()</h4>
+<pre><code class="hljs javascript">xy.wavePoints(); <span class="hljs-comment">// get PVector ArrayList of all drawn coordinates (0.0 – 1.0)</span>
+</code></pre>
+<h4 id="steps()" name="steps()">steps()</h4>
+<pre><code class="hljs javascript">xy.steps(); <span class="hljs-comment">// get current steps between points, default 24</span>
+xy.steps(newVal); <span class="hljs-comment">// set step multiplier, segments, between points</span>
+</code></pre>
+<h4 id="limitpoints()" name="limitpoints()">limitPoints()</h4>
+<pre><code class="hljs javascript">xy.limitPoints(); <span class="hljs-comment">// get number of limited drawing points</span>
+xy.limitPoints(newLimit); <span class="hljs-comment">// set new limit of points for drawing</span>
+</code></pre>
+<h4 id="limitpath()" name="limitpath()">limitPath()</h4>
+<pre><code class="hljs javascript">xy.limitPath(); <span class="hljs-comment">// get current limit of drawn path</span>
+xy.limitPath(newLimit); <span class="hljs-comment">// avoid drawn vectors beyond border edges (px)</span>
+</code></pre>
+<hr>
+<h3 id="record-audio" name="record-audio">Record Audio</h3>
+<p>Easily save your drawings as .wav audio files! Just use a keyPress to initiate starting and stopping the recording (see demo). Recording uses our set sampleRate.</p>
+<h4 id="recorderbegin()" name="recorderbegin()">recorderBegin()</h4>
+<pre><code class="hljs javascript">xy.recorderBegin(); <span class="hljs-comment">// will name file "XYscope_timestamp.wav"</span>
+xy.recorderBegin(<span class="hljs-string">"customName"</span>); <span class="hljs-comment">// set name, timestamp added</span>
+</code></pre>
+<h4 id="recorderend()" name="recorderend()">recorderEnd()</h4>
+<pre><code class="hljs javascript">xy.recorderEnd(); <span class="hljs-comment">// complete recording</span>
+</code></pre>
+<hr>
+<h3 id="primitive-shapes" name="primitive-shapes">Primitive Shapes</h3>
+<p>Most primitives from Processing have been ported, so you only need to add <code>xy.</code> in front of them! They can also be used without parameters, for quickly testing.</p>
+<h4 id="point()" name="point()">point()</h4>
+<pre><code class="hljs css"><span class="hljs-selector-tag">xy</span><span class="hljs-selector-class">.point</span>();
+<span class="hljs-selector-tag">xy</span><span class="hljs-selector-class">.point</span>(<span class="hljs-selector-tag">x</span>, <span class="hljs-selector-tag">y</span>);
+<span class="hljs-selector-tag">xy</span><span class="hljs-selector-class">.point</span>(<span class="hljs-selector-tag">x</span>, <span class="hljs-selector-tag">y</span>, <span class="hljs-selector-tag">z</span>);
+</code></pre>
+<h4 id="line()" name="line()">line()</h4>
+<pre><code class="hljs css"><span class="hljs-selector-tag">xy</span><span class="hljs-selector-class">.line</span>();
+<span class="hljs-selector-tag">xy</span><span class="hljs-selector-class">.line</span>(<span class="hljs-selector-tag">x1</span>, <span class="hljs-selector-tag">y1</span>, <span class="hljs-selector-tag">x2</span>, <span class="hljs-selector-tag">y2</span>);
+<span class="hljs-selector-tag">xy</span><span class="hljs-selector-class">.line</span>(<span class="hljs-selector-tag">x1</span>, <span class="hljs-selector-tag">y1</span>, <span class="hljs-selector-tag">z1</span>, <span class="hljs-selector-tag">x2</span>, <span class="hljs-selector-tag">y2</span>, <span class="hljs-selector-tag">z2</span>);
+</code></pre>
+<h4 id="square()" name="square()">square()</h4>
+<pre><code class="hljs javascript">xy.rectMode(); <span class="hljs-comment">// default CORNER, CENTER to draw center out</span>
+
+xy.square();
+xy.square(x, y, w);
+</code></pre>
+<h4 id="rect()" name="rect()">rect()</h4>
+<pre><code class="hljs javascript">xy.rectMode(); <span class="hljs-comment">// default CORNER, CENTER to draw center out</span>
+
+xy.rect();
+xy.rect(x, y, w);
+xy.rect(x, y, w, h);
+</code></pre>
+<h4 id="circle()" name="circle()">circle()</h4>
+<pre><code class="hljs javascript">xy.ellipseDetail(); <span class="hljs-comment">// get current facets of ellipse</span>
+xy.ellipseDetail(newVal); <span class="hljs-comment">// set new count of facets, default 30</span>
+
+xy.circle();
+xy.circle(x, y, w);
+</code></pre>
+<h4 id="ellipse()" name="ellipse()">ellipse()</h4>
+<pre><code class="hljs javascript">xy.ellipseDetail(); <span class="hljs-comment">// get current facets of ellipse</span>
+xy.ellipseDetail(newVal); <span class="hljs-comment">// set new count of facets, default 30</span>
+
+xy.ellipse();
+xy.ellipse(x, y, w);
+xy.ellipse(x, y, w, h);
+</code></pre>
+<h4 id="complex-shape" name="complex-shape">complex shape</h4>
+<pre><code class="hljs javascript">xy.beginShape();
+
+xy.vertex();
+xy.vertex(x, y);
+xy.vertex(x, y, z); <span class="hljs-comment">// if in P3D mode</span>
+<span class="hljs-comment">// ...</span>
+
+xy.endShape();
+xy.endShape(CLOSE); <span class="hljs-comment">// closes form</span>
+</code></pre>
+<h4 id="lissajous()" name="lissajous()">lissajous()</h4>
+<pre><code class="hljs css"><span class="hljs-selector-tag">xy</span><span class="hljs-selector-class">.lissajous</span>();
+<span class="hljs-selector-tag">xy</span><span class="hljs-selector-class">.lissajous</span>(<span class="hljs-selector-tag">x</span>, <span class="hljs-selector-tag">y</span>, <span class="hljs-selector-tag">radius</span>, <span class="hljs-selector-tag">ratioA</span>, <span class="hljs-selector-tag">ratioB</span>, <span class="hljs-selector-tag">phase</span>, <span class="hljs-selector-tag">resolution</span>);
+</code></pre>
+<h4 id="box()" name="box()">box()</h4>
+<pre><code class="hljs css"><span class="hljs-selector-tag">xy</span><span class="hljs-selector-class">.box</span>();
+<span class="hljs-selector-tag">xy</span><span class="hljs-selector-class">.box</span>(<span class="hljs-selector-tag">size</span>);
+<span class="hljs-selector-tag">xy</span><span class="hljs-selector-class">.box</span>(<span class="hljs-selector-tag">rx</span>, <span class="hljs-selector-tag">ryz</span>);
+<span class="hljs-selector-tag">xy</span><span class="hljs-selector-class">.box</span>(<span class="hljs-selector-tag">rx</span>, <span class="hljs-selector-tag">ry</span>, <span class="hljs-selector-tag">rz</span>);
+</code></pre>
+<h4 id="sphere()" name="sphere()">sphere()</h4>
+<pre><code class="hljs javascript">xy.sphere();
+xy.sphere(size);
+xy.sphere(size, detailXY); <span class="hljs-comment">// default 24</span>
+xy.sphere(size, detailX, detailY); <span class="hljs-comment">// default 24, 24</span>
+</code></pre>
+<h4 id="ellipsoid()" name="ellipsoid()">ellipsoid()</h4>
+<pre><code class="hljs javascript">xy.ellipsoid();
+xy.ellipsoid(rx, ry, rz);
+xy.ellipsoid(rx, ry, rz, detailXY); <span class="hljs-comment">// default 24</span>
+xy.ellipsoid(rx, ry, rz, detailX, detailY); <span class="hljs-comment">// default 24, 24</span>
+</code></pre>
+<h4 id="torus()" name="torus()">torus()</h4>
+<pre><code class="hljs javascript">xy.torus();
+xy.torus(radius, tubeRadius);
+xy.torus(radius, tubeRadius, detailXY); <span class="hljs-comment">// default 24</span>
+xy.torus(radius, tubeRadius, detailX, detailY); <span class="hljs-comment">// default 24, 24</span>
+</code></pre>
+<hr>
+<h3 id="text" name="text">Text</h3>
+<h4 id="text()" name="text()">text()</h4>
+<pre><code class="hljs javascript">xy.text(); <span class="hljs-comment">// paramless text drawing</span>
+xy.text(<span class="hljs-string">"string"</span>, x, y); <span class="hljs-comment">// use '\n' for multi-line text</span>
+</code></pre>
+<h4 id="textpaths()" name="textpaths()">textPaths()</h4>
+<p>Use coordinates of Hershey text for manipulating type!</p>
+<pre><code class="hljs javascript">xy.textPaths(<span class="hljs-string">"string"</span>, x, y); <span class="hljs-comment">// return 2D Array of PVector coords</span>
+</code></pre>
+<h4 id="textfont()" name="textfont()">textFont()</h4>
+<pre><code class="hljs javascript">println(xy.fonts); <span class="hljs-comment">// print list of avilable Hershey fonts</span>
+xy.textFont(<span class="hljs-string">"fontname"</span>); <span class="hljs-comment">// set active Hershey font</span>
+</code></pre>
+<h4 id="textsize()" name="textsize()">textSize()</h4>
+<pre><code class="hljs javascript">xy.textSize(); <span class="hljs-comment">// get current textSize</span>
+xy.textSize(newSize); <span class="hljs-comment">// set new textSize</span>
+</code></pre>
+<h4 id="textleading()" name="textleading()">textLeading()</h4>
+<pre><code class="hljs javascript">xy.textLeading(); <span class="hljs-comment">// get current textLeading</span>
+xy.textLeading(newSize); <span class="hljs-comment">// set new textLeading</span>
+</code></pre>
+<h4 id="textalign()" name="textalign()">textAlign()</h4>
+<pre><code class="hljs javascript">xy.textAlign(hAlign); <span class="hljs-comment">// Horz: LEFT (default) / CENTER / RIGHT</span>
+xy.textAlign(hAlign, vAlign); <span class="hljs-comment">// Vert options: TOP / CENTER / BOTTOM</span>
+</code></pre>
+<h4 id="textwidth()" name="textwidth()">textWidth()</h4>
+<pre><code class="hljs javascript">xy.textWidth(int); <span class="hljs-comment">// from 32 characters, get width of char</span>
+xy.textWidth(<span class="hljs-string">"string"</span>); <span class="hljs-comment">// get width of text for positioning</span>
+</code></pre>
+<hr>
+<h3 id="modulation" name="modulation">Modulation</h3>
+<h4 id="freq()" name="freq()">freq()</h4>
+<p>Frequency of oscillators</p>
+<pre><code class="hljs javascript"><span class="hljs-comment">// get</span>
+xy.freq(); <span class="hljs-comment">// get PVector (.x, .y, .z) of freqs</span>
+xy.freq().x;   <span class="hljs-comment">// get frequency of x oscillator </span>
+
+<span class="hljs-comment">// set</span>
+xy.freq(freqXY);  <span class="hljs-comment">// default is 50.0 </span>
+xy.freq(freqX, freqY); <span class="hljs-comment">// set x, y frequencies </span>
+xy.freq(freqX, freqY, freqZ); <span class="hljs-comment">// set x, y, z frequencies </span>
+xy.freq(PVector freqXYZ); <span class="hljs-comment">// set as PVector </span>
+ 
+xy.resetWaves(); <span class="hljs-comment">// occasionally needed if they slip out of phase </span>
+</code></pre>
+<h4 id="amp()" name="amp()">amp()</h4>
+<p>Amplitude of oscillators</p>
+<pre><code class="hljs javascript"><span class="hljs-comment">// get</span>
+xy.amp();   <span class="hljs-comment">// get PVector (.x, .y, .z) of amps</span>
+xy.amp().x; <span class="hljs-comment">// get amplitude of x oscillator</span>
+
+<span class="hljs-comment">// set</span>
+xy.amp(ampXY); <span class="hljs-comment">// default is 1.0 </span>
+xy.amp(ampX, ampY); <span class="hljs-comment">// set x, y to specific amplitudes </span>
+xy.amp(ampX, ampY, ampZ); <span class="hljs-comment">// set x, y, z to specific amplitudes </span>
+xy.amp(PVector ampXYZ); <span class="hljs-comment">// set as PVector</span>
+</code></pre>
+<h4 id="pan()" name="pan()">pan()</h4>
+<p>Optionally swap the hard pan of XY rather than physical cables</p>
+<pre><code class="hljs javascript">xy.pan(leftPan, rightPan); <span class="hljs-comment">// default is -1.0, 1.0</span>
+</code></pre>
+<hr>
+<h3 id="vectrex" name="vectrex">Vectrex</h3>
+<pre><code class="hljs javascript">xy.vectrex(<span class="hljs-number">0</span>); <span class="hljs-comment">// 0 for portrait, -90/90 for landscape orientation</span>
+xy.vectrex(vw, vh, vamp, vrot); <span class="hljs-comment">// custom width, height, amp, rotation</span>
+
+xy.vectrexRatio(); <span class="hljs-comment">// get current ratio</span>
+xy.vectrexRatio(newRatio); <span class="hljs-comment">// set new ratio, default is .82</span>
+</code></pre>
+<hr>
+<h3 id="laser" name="laser">Laser</h3>
+<pre><code class="hljs javascript">xy.laser(<span class="hljs-string">"dac_Red"</span>, <span class="hljs-string">"dac_GreenBlue"</span>); <span class="hljs-comment">// custom 2ch pairs for R, GB</span>
+
+<span class="hljs-comment">// be cautious of laser galvos, can help smooth graphics</span>
+xy.laserLPF(); <span class="hljs-comment">// get value of laser's LowPassFilter</span>
+xy.laserLPF(newLPF); <span class="hljs-comment">// set mew value of LowPassFilter (0.1 – 20000.0)</span>
+
+<span class="hljs-comment">// avoid dangerous hotspot, only draw laser if shape is big enough</span>
+xy.spotKiller(); <span class="hljs-comment">// get current min size of drawing for laser</span>
+xy.spotKiller(newVal); <span class="hljs-comment">// set min drawing size to prevent laser hotspot</span>
+
+xy.stroke(r, g, b); <span class="hljs-comment">// set RGB laser stroke color</span>
+xy.stroke(PVector rgb); <span class="hljs-comment">// set as PVector</span>
+
+xy.strokeFreq(); <span class="hljs-comment">// get laser RGB channel frequencies</span>
+xy.strokeFreq(freqRGB); <span class="hljs-comment">// set laser RGB freq as group</span>
+xy.strokeFreq(freqR, freqG, freqB); <span class="hljs-comment">// set laser R, G, B separately</span>
+xy.strokeFreq(PVector freqRGB); <span class="hljs-comment">// set as PVector</span>
+
+<span class="hljs-comment">// some lasers ignore values below __ when setting colors, </span>
+<span class="hljs-comment">// use this to set lowest point when color mixing</span>
+xy.strokeMin(); <span class="hljs-comment">// get curret min RGB values for laser stroke</span>
+xy.strokeMin(minR, minG, minB); <span class="hljs-comment">// set new min values (0.0 - 255.0)</span>
+xy.strokeMin(PVector minPV); <span class="hljs-comment">// set new min as PVector</span>
+
+xy.strokeWB(wbR, wbG, wbB); <span class="hljs-comment">// set values needed for white light</span>
+xy.strokeWB(PVector wbRGB); <span class="hljs-comment">// set values as PVector</span>
+
+xy.strokeDash(); <span class="hljs-comment">// get current dash setting</span>
+xy.strokeDash(sdRGB); <span class="hljs-comment">// set laser dash count for RGB strokes</span>
+xy.strokeDash(sdR, sdG, sdB); <span class="hljs-comment">// set dashes per R, G, B</span>
+xy.strokeDash(PVector sdRGB); <span class="hljs-comment">// set as PVector</span>
+</code></pre>
+<hr>
+<h3 id="rendering" name="rendering">Rendering</h3>
+<pre><code class="hljs javascript">xy.drawAll(); <span class="hljs-comment">// all views below </span>
+xy.drawPath(); <span class="hljs-comment">// shapes being drawn </span>
+xy.drawPoints(); <span class="hljs-comment">// points along paths of drawing </span>
+xy.drawWaveform(); <span class="hljs-comment">// drawing as oscillator's waveform </span>
+xy.drawWave(); <span class="hljs-comment">// waveform over time at frequency </span>
+xy.drawXY(); <span class="hljs-comment">// simulated xy-mode oscilloscope </span>
+
+xy.debugView(); <span class="hljs-comment">// check if debugView active</span>
+xy.debugView(boolean); <span class="hljs-comment">// compare drawXY() to drawWaveform()</span>
+</code></pre>
+<h3 id="vars" name="vars">Vars</h3>
+<p>Lastly, many variables within XYscope are public for your vector hacking needs.</p>
+<pre><code class="hljs javascript">shapes; <span class="hljs-comment">// XYShapeList, processed by buildWaves()</span>
+minim, minimZ; <span class="hljs-comment">// instances of Minim</span>
+recorder; <span class="hljs-comment">// instance for audio recording</span>
+outXY, outZ; <span class="hljs-comment">// AudioOutput (used to patch for additive-synth)</span>
+sumXY, sumZ; <span class="hljs-comment">// Summer for patching filters</span>
+waveX, waveY, waveZ; <span class="hljs-comment">// Oscil for each XYZ oscillators</span>
+tableX, tableY, tableZ; <span class="hljs-comment">// XYWavetable, applied to oscillator</span>
+shapeX, shapeY, shapeZ; <span class="hljs-comment">// float[] used for wavetables</span>
+fonts; <span class="hljs-comment">// list of Hershey fonts</span>
+
+minimR, minimBG; <span class="hljs-comment">// instances of Minim</span>
+waveR, waveG, waveB; <span class="hljs-comment">// Oscil for each RGB oscillators</span>
+tableR, tableG, tableB; <span class="hljs-comment">// XYWavetable, applied to oscillator</span>
+shapeR, shapeG, shapeB; <span class="hljs-comment">// float[] used for wavetables</span>
+
+</code></pre>
+<h2 id="extras" name="extras">Extras</h2>
+<h3 id="contributing" name="contributing">Contributing</h3>
+<p>Found a bug, missing feature, and/or created a project with XYscope? Let me know!<br>
+Create an <a href="https://github.com/ffd8/xyscope/issues" target="_blank">issue on GitHub</a>.</p>
+<h3 id="license" name="license">License</h3>
+<p>This project is licensed under the LGPL License - see <a href="https://github.com/ffd8/xyscope/blob/master/license.txt" target="_blank">LICENSE.md</a> for details.</p>
+<h3 id="shoutouts" name="shoutouts">Shoutouts</h3>
+<ul>
+<li><a href="http://dailydrawbot.tumblr.com" target="_blank">Just Van Rossum</a>, the enlightening conversation on my X-Y attempts.</li>
+<li><a href="https://stefaniebraeuer.ch/" target="_blank">Stefanie Bräuer</a>, feeding the obsession with crucial theory + context.</li>
+<li><a href="https://asdfg.me" target="_blank">Hansi Raber</a>, java meta insights + finding external WaveTable bug!</li>
+<li><a href="https://github.com/processing/processing-library-template" target="_blank">Processing Library Template</a></li>
+</ul>
+</div>
+
+	<div id="spacer"></div>
+
+	<script type="text/javascript">
+
+		window.addEventListener('scroll', (e)=>{
+			let spacer = document.getElementById('spacer')
+			if(window.scrollY > spacer.offsetTop - 1){
+				beamOpacity = 250
+				bgOpacity = 5
+				bgTint = 220
+			}else{
+				beamOpacity = 50
+				bgOpacity = 10
+				bgTint = 250
+			}
+		})
+
+		function windowResized() {
+			resizeCanvas(windowWidth, windowHeight);
+		}
+
+
+		// XYscopeBG v.1
+		// cc teddavis.org 2023
+
+		let bgOpacity = 10, bgTint = 250, beamOpacity = 50, fc = 0
+
+		function setup() {
+			createCanvas(windowWidth, windowHeight);
+			pixelDensity(.4)
+		}
+
+		function draw() {
+			noFill();
+			background(bgTint, 250, bgTint, bgOpacity)
+			stroke(100, 250, 100, beamOpacity)
+			xyDrawAni(width / 2, height / 2, frameCount * .003);
+			fc += 1.0;
+		}
+
+		function xyDrawAni(xOff, yOff, phase) {
+			push();
+			translate(xOff + noise(frameCount * .01) * 15, yOff + noise(frameCount * .011) * 15)
+			let c = xyCoords[fc % (xyCoords.length - 1)]
+			let c2 = xyCoords[(fc % (xyCoords.length - 1)) + 1]
+			let d = dist(c[0], c[1], c2[0], c2[1]) * 500
+			if(d > 10) {
+				d = 2
+			}
+			strokeWeight(d + noise(frameCount*.5)*2)
+			line(c[0] * width / 2, c[1] * -width / 2, c2[0] * width / 2, c2[1] * -width / 2)
+			pop();
+		}
+
+		let xyCoords = [
+			[-0.8933222, 0.17857146],
+			[-0.88827753, 0.17100447],
+			[-0.8832329, 0.16343749],
+			[-0.8780809, 0.1557095],
+			[-0.87303627, 0.14814258],
+			[-0.8678843, 0.1404146],
+			[-0.86283964, 0.1328476],
+			[-0.85768765, 0.12511963],
+			[-0.852643, 0.11755264],
+			[-0.847491, 0.10982466],
+			[-0.8424464, 0.10225773],
+			[-0.8372944, 0.09452975],
+			[-0.83224976, 0.08696276],
+			[-0.82720506, 0.07939577],
+			[-0.8220531, 0.07166779],
+			[-0.8170085, 0.0641008],
+			[-0.8118565, 0.05637288],
+			[-0.8068118, 0.048805892],
+			[-0.8016598, 0.04107791],
+			[-0.7966152, 0.033510923],
+			[-0.7914632, 0.025782943],
+			[-0.78641856, 0.018215954],
+			[-0.78126657, 0.010488033],
+			[-0.77622193, 0.0029210448],
+			[-0.77106994, -0.0048069954],
+			[-0.7660253, -0.012373924],
+			[-0.7609806, -0.019940853],
+			[-0.7558286, -0.027668834],
+			[-0.75078404, -0.03523588],
+			[-0.74563205, -0.042963862],
+			[-0.74058735, -0.05053079],
+			[-0.73543537, -0.058258772],
+			[-0.7303907, -0.0658257],
+			[-0.7252388, -0.0735538],
+			[-0.7201941, -0.08112073],
+			[-0.7150421, -0.08884871],
+			[-0.7099975, -0.09641564],
+			[-0.70495284, -0.10398269],
+			[-0.69980085, -0.11171055],
+			[-0.69475615, -0.1192776],
+			[-0.6896042, -0.12700558],
+			[-0.68531084, 0.17808849],
+			[-0.6904628, 0.1703605],
+			[-0.6955075, 0.16279352],
+			[-0.7006595, 0.15506554],
+			[-0.70570415, 0.14749855],
+			[-0.71085614, 0.13977057],
+			[-0.7159008, 0.13220364],
+			[-0.72105277, 0.12447566],
+			[-0.7260974, 0.11690867],
+			[-0.73114204, 0.10934168],
+			[-0.73629403, 0.1016137],
+			[-0.74133873, 0.09404671],
+			[-0.7464907, 0.08631873],
+			[-0.7515353, 0.0787518],
+			[-0.7566873, 0.07102382],
+			[-0.761732, 0.06345683],
+			[-0.76688397, 0.055728853],
+			[-0.7719286, 0.048161864],
+			[-0.7770806, 0.040433884],
+			[-0.78212523, 0.032866955],
+			[-0.7871699, 0.025299966],
+			[-0.79232186, 0.017571986],
+			[-0.7973665, 0.010004997],
+			[-0.8025185, 0.0022770166],
+			[-0.8075631, -0.005289912],
+			[-0.8127151, -0.013017893],
+			[-0.81775975, -0.02058494],
+			[-0.82291174, -0.028312922],
+			[-0.82795644, -0.03587985],
+			[-0.8331084, -0.04360783],
+			[-0.83815306, -0.05117476],
+			[-0.843305, -0.05890274],
+			[-0.8483497, -0.06646979],
+			[-0.8533943, -0.07403672],
+			[-0.8585463, -0.0817647],
+			[-0.86359096, -0.08933163],
+			[-0.86874294, -0.09705973],
+			[-0.8737876, -0.104626656],
+			[-0.87893957, -0.112354636],
+			[-0.8839842, -0.119921565],
+			[-0.8891362, -0.12764955],
+			[-0.6450803, 0.17751396],
+			[-0.63927907, 0.17026228],
+			[-0.6335986, 0.16316175],
+			[-0.6277973, 0.15591013],
+			[-0.62211686, 0.14880955],
+			[-0.6164364, 0.14170897],
+			[-0.6106351, 0.13445735],
+			[-0.60495466, 0.12735683],
+			[-0.5991534, 0.12010515],
+			[-0.59347296, 0.113004625],
+			[-0.58767164, 0.105753005],
+			[-0.5819912, 0.09865242],
+			[-0.5761899, 0.0914008],
+			[-0.57050943, 0.08430022],
+			[-0.5647081, 0.0770486],
+			[-0.5590277, 0.06994808],
+			[-0.55334723, 0.062847495],
+			[-0.5475459, 0.055595875],
+			[-0.54186547, 0.048495293],
+			[-0.53606415, 0.041243672],
+			[-0.5303837, 0.03414309],
+			[-0.5268788, 0.02666974],
+			[-0.5268788, 0.017586589],
+			[-0.5268788, 0.008310139],
+			[-0.5268788, -7.7307224E-4],
+			[-0.5268788, -0.010049462],
+			[-0.5268788, -0.019132614],
+			[-0.5268788, -0.028409123],
+			[-0.5268788, -0.037492275],
+			[-0.5268788, -0.046575427],
+			[-0.5268788, -0.055851817],
+			[-0.5268788, -0.06493509],
+			[-0.5268788, -0.07421148],
+			[-0.5268788, -0.08329463],
+			[-0.5268788, -0.09257114],
+			[-0.5268788, -0.10165429],
+			[-0.5268788, -0.11093068],
+			[-0.5268788, -0.12001395],
+			[-0.5268788, -0.12929034],
+			[-0.41049004, 0.17524779],
+			[-0.41617054, 0.16814727],
+			[-0.4219718, 0.16089559],
+			[-0.42765224, 0.15379506],
+			[-0.43345356, 0.14654344],
+			[-0.439134, 0.13944286],
+			[-0.44493532, 0.13219124],
+			[-0.45061576, 0.12509066],
+			[-0.45641708, 0.11783904],
+			[-0.46209753, 0.110738456],
+			[-0.46789885, 0.103486836],
+			[-0.4735793, 0.09638631],
+			[-0.4793806, 0.08913463],
+			[-0.48506105, 0.08203411],
+			[-0.4907415, 0.07493353],
+			[-0.4965428, 0.06768191],
+			[-0.50222325, 0.060581326],
+			[-0.5080245, 0.053329706],
+			[-0.513705, 0.046229124],
+			[-0.5195063, 0.038977504],
+			[-0.5251867, 0.03187698],
+			[-0.19694203, 0.035439014],
+			[-0.20098484, 0.043524623],
+			[-0.20511365, 0.05178231],
+			[-0.20898443, 0.05952382],
+			[-0.21758366, 0.06239021],
+			[-0.22618294, 0.065256655],
+			[-0.23478216, 0.06812304],
+			[-0.24356437, 0.071050465],
+			[-0.2521636, 0.07391685],
+			[-0.26074708, 0.074404776],
+			[-0.26979113, 0.074404776],
+			[-0.27902752, 0.074404776],
+			[-0.28807157, 0.074404776],
+			[-0.29730803, 0.074404776],
+			[-0.30540574, 0.07202625],
+			[-0.31418788, 0.06909889],
+			[-0.32278717, 0.06623244],
+			[-0.3313864, 0.063366055],
+			[-0.3401686, 0.060438633],
+			[-0.34540755, 0.054534853],
+			[-0.34953636, 0.046277165],
+			[-0.35357916, 0.038191557],
+			[-0.35770798, 0.02993393],
+			[-0.35409528, 0.022364438],
+			[-0.3499664, 0.01410681],
+			[-0.3459236, 0.0060212016],
+			[-0.34119266, -8.6021423E-4],
+			[-0.3331071, -0.004902959],
+			[-0.32484943, -0.009031773],
+			[-0.31676382, -0.013074517],
+			[-0.30879664, -0.015751839],
+			[-0.29970902, -0.017569304],
+			[-0.29081076, -0.019348979],
+			[-0.28172314, -0.021166563],
+			[-0.27282488, -0.02294612],
+			[-0.26373726, -0.024763703],
+			[-0.254839, -0.026543379],
+			[-0.24575138, -0.028360844],
+			[-0.2375421, -0.030364037],
+			[-0.22928447, -0.03449285],
+			[-0.22119886, -0.038535595],
+			[-0.21311325, -0.04257846],
+			[-0.20717806, -0.048255563],
+			[-0.20313525, -0.05634117],
+			[-0.19900644, -0.0645988],
+			[-0.19496363, -0.07268441],
+			[-0.19410348, -0.081082106],
+			[-0.19418949, -0.08945775],
+			[-0.1983183, -0.09771538],
+			[-0.2023611, -0.10580099],
+			[-0.20648992, -0.114058614],
+			[-0.21172887, -0.119962454],
+			[-0.22051108, -0.12288988],
+			[-0.2291103, -0.12575626],
+			[-0.23770958, -0.12862265],
+			[-0.24649179, -0.13155007],
+			[-0.25458944, -0.13392854],
+			[-0.2638259, -0.13392854],
+			[-0.27286994, -0.13392854],
+			[-0.2821064, -0.13392854],
+			[-0.2911504, -0.13392854],
+			[-0.29973388, -0.13344061],
+			[-0.3083331, -0.13057423],
+			[-0.3171153, -0.1276468],
+			[-0.32571453, -0.12478042],
+			[-0.33449674, -0.12185311],
+			[-0.34291303, -0.11904764],
+			[-0.34678382, -0.11130607],
+			[-0.35091263, -0.103048444],
+			[-0.35495543, -0.094962835],
+			[0.032593846, 0.031673253],
+			[0.026177287, 0.03808981],
+			[0.019624233, 0.044642866],
+			[0.013207674, 0.051059425],
+			[0.006654501, 0.05761248],
+			[-4.1782856E-4, 0.062104344],
+			[-0.008675456, 0.06623316],
+			[-0.016761065, 0.07027596],
+			[-0.024846673, 0.07431877],
+			[-0.033485413, 0.074404776],
+			[-0.042529464, 0.074404776],
+			[-0.05176592, 0.074404776],
+			[-0.06080997, 0.074404776],
+			[-0.06966156, 0.074404776],
+			[-0.07757515, 0.07044798],
+			[-0.085832775, 0.06631917],
+			[-0.09391838, 0.062276363],
+			[-0.101198256, 0.057749033],
+			[-0.107614815, 0.051332474],
+			[-0.11416793, 0.04477936],
+			[-0.12058449, 0.03836286],
+			[-0.12700105, 0.03194624],
+			[-0.13095403, 0.024456024],
+			[-0.13382041, 0.015856802],
+			[-0.13674784, 0.0070745945],
+			[-0.13961422, -0.0015246868],
+			[-0.14254165, -0.010306835],
+			[-0.14406633, -0.018529177],
+			[-0.14406633, -0.027745724],
+			[-0.14406633, -0.036770344],
+			[-0.14382237, -0.045374632],
+			[-0.14095598, -0.053973913],
+			[-0.13808954, -0.062573195],
+			[-0.13516217, -0.07135534],
+			[-0.13229573, -0.079954624],
+			[-0.12936836, -0.08873689],
+			[-0.123587966, -0.0948832],
+			[-0.11703485, -0.10143626],
+			[-0.11061829, -0.10785282],
+			[-0.10406524, -0.11440587],
+			[-0.0977031, -0.119907856],
+			[-0.08944547, -0.12403667],
+			[-0.08135986, -0.12807941],
+			[-0.073102236, -0.13220823],
+			[-0.06504333, -0.13392854],
+			[-0.05599928, -0.13392854],
+			[-0.046762824, -0.13392854],
+			[-0.037718832, -0.13392854],
+			[-0.028482378, -0.13392854],
+			[-0.02054578, -0.13169205],
+			[-0.012288153, -0.12756336],
+			[-0.0042025447, -0.12352049],
+			[0.004055023, -0.11939168],
+			[0.010204077, -0.11358678],
+			[0.01675725, -0.10703361],
+			[0.023173809, -0.10061705],
+			[0.029726863, -0.094064],
+			[0.1719358, 0.07345861],
+			[0.16385019, 0.06941581],
+			[0.15559256, 0.065286994],
+			[0.14750695, 0.06124419],
+			[0.14065313, 0.05611074],
+			[0.13423657, 0.04969418],
+			[0.12768352, 0.043141127],
+			[0.12126696, 0.036724567],
+			[0.11471391, 0.030171454],
+			[0.11180377, 0.022260427],
+			[0.10887635, 0.013478279],
+			[0.10600996, 0.0048790574],
+			[0.10314357, -0.0037201643],
+			[0.10021615, -0.012502432],
+			[0.09942329, -0.020833254],
+			[0.09942329, -0.03004992],
+			[0.09942329, -0.03907442],
+			[0.10039914, -0.04757023],
+			[0.103265524, -0.05616951],
+			[0.10619295, -0.06495166],
+			[0.109059334, -0.07355094],
+			[0.11198676, -0.08233309],
+			[0.11512339, -0.09010482],
+			[0.121676564, -0.09665799],
+			[0.12809312, -0.10307455],
+			[0.13450968, -0.10949111],
+			[0.14106274, -0.11604416],
+			[0.14785099, -0.12093997],
+			[0.15610862, -0.12506878],
+			[0.16419423, -0.12911165],
+			[0.17245185, -0.13324046],
+			[0.1807555, -0.13392854],
+			[0.18999195, -0.13392854],
+			[0.19903588, -0.13392854],
+			[0.20827234, -0.13392854],
+			[0.21731639, -0.13392854],
+			[0.22500825, -0.13065994],
+			[0.23326588, -0.12653112],
+			[0.24135149, -0.12248826],
+			[0.24891543, -0.11836505],
+			[0.255332, -0.11194849],
+			[0.26188505, -0.10539544],
+			[0.2683016, -0.09897888],
+			[0.27485478, -0.092425704],
+			[0.27927554, -0.0854435],
+			[0.28220284, -0.07666135],
+			[0.28506923, -0.06806207],
+			[0.28799665, -0.0592798],
+			[0.29086304, -0.050680637],
+			[0.29287565, -0.042530656],
+			[0.29287565, -0.03331411],
+			[0.29287565, -0.024289489],
+			[0.29287565, -0.015072942],
+			[0.29025316, -0.0070135593],
+			[0.28732586, 0.0017686486],
+			[0.28445935, 0.01036793],
+			[0.28153205, 0.019150078],
+			[0.27866566, 0.0277493],
+			[0.27335298, 0.03440368],
+			[0.26693642, 0.04082024],
+			[0.26038337, 0.047373295],
+			[0.2539668, 0.053789854],
+			[0.2478888, 0.05969584],
+			[0.23963118, 0.06382465],
+			[0.23154557, 0.06786746],
+			[0.22328794, 0.07199627],
+			[0.21539211, 0.074404776],
+			[0.20615566, 0.074404776],
+			[0.1971116, 0.074404776],
+			[0.18787527, 0.074404776],
+			[0.17883122, 0.074404776],
+			[0.34681904, 0.07034129],
+			[0.34681904, 0.061246872],
+			[0.34681904, 0.052152455],
+			[0.34681904, 0.0428645],
+			[0.34681904, 0.033770084],
+			[0.34681904, 0.02448219],
+			[0.34681904, 0.015387714],
+			[0.34681904, 0.00609982],
+			[0.34681904, -0.0029946566],
+			[0.34681904, -0.01228261],
+			[0.34681904, -0.021376967],
+			[0.34681904, -0.03066492],
+			[0.34681904, -0.03975928],
+			[0.34681904, -0.04904723],
+			[0.34681904, -0.05814171],
+			[0.34681904, -0.067236066],
+			[0.34681904, -0.07652402],
+			[0.34681904, -0.085618496],
+			[0.34681904, -0.09490645],
+			[0.34681904, -0.10400081],
+			[0.34681904, -0.11328876],
+			[0.34681904, -0.12238312],
+			[0.34681904, -0.13167107],
+			[0.34681904, -0.14076555],
+			[0.34681904, -0.1500535],
+			[0.34681904, -0.15914786],
+			[0.34681904, -0.16824234],
+			[0.34681904, -0.17753029],
+			[0.34681904, -0.18662465],
+			[0.34681904, -0.1959126],
+			[0.34681904, -0.20500708],
+			[0.34681904, -0.21429491],
+			[0.34681904, -0.22338939],
+			[0.34681904, -0.23267734],
+			[0.34927642, 0.03221929],
+			[0.35582948, 0.038772404],
+			[0.36224604, 0.045188963],
+			[0.3687992, 0.051742017],
+			[0.37521577, 0.058158576],
+			[0.38243008, 0.062448382],
+			[0.3906877, 0.066577196],
+			[0.3987733, 0.07062],
+			[0.40653527, 0.074404776],
+			[0.41557932, 0.074404776],
+			[0.42481577, 0.074404776],
+			[0.43385983, 0.074404776],
+			[0.44309616, 0.074404776],
+			[0.45150173, 0.07414675],
+			[0.45975935, 0.070017934],
+			[0.46784496, 0.06597513],
+			[0.4761027, 0.061846256],
+			[0.48306847, 0.057202935],
+			[0.48948503, 0.050786376],
+			[0.49603808, 0.044233322],
+			[0.50245464, 0.037816763],
+			[0.5090077, 0.03126365],
+			[0.5125221, 0.023724139],
+			[0.5154495, 0.01494199],
+			[0.5183159, 0.006342709],
+			[0.52124333, -0.002439499],
+			[0.5241097, -0.011038661],
+			[0.5253905, -0.01948917],
+			[0.5253905, -0.02851379],
+			[0.5253905, -0.03753829],
+			[0.5249026, -0.046106458],
+			[0.5220362, -0.05470574],
+			[0.5191088, -0.06348801],
+			[0.5162424, -0.07208717],
+			[0.51331496, -0.080869436],
+			[0.5105095, -0.08928573],
+			[0.5042294, -0.095565796],
+			[0.49781287, -0.101982355],
+			[0.4912598, -0.10853541],
+			[0.48484325, -0.11495197],
+			[0.47816706, -0.120337844],
+			[0.47008145, -0.12438071],
+			[0.46199584, -0.12842345],
+			[0.4537382, -0.13255227],
+			[0.44559777, -0.13392854],
+			[0.4363613, -0.13392854],
+			[0.42731726, -0.13392854],
+			[0.4180808, -0.13392854],
+			[0.40903687, -0.13392854],
+			[0.4010098, -0.13126206],
+			[0.3929242, -0.1272192],
+			[0.38466656, -0.12309039],
+			[0.37658095, -0.11904764],
+			[0.370574, -0.113040686],
+			[0.36402082, -0.10648751],
+			[0.35760427, -0.10007095],
+			[0.3510512, -0.0935179],
+			[0.6080917, -0.014880896],
+			[0.61737823, -0.014880896],
+			[0.62647116, -0.014880896],
+			[0.6357577, -0.014880896],
+			[0.64485073, -0.014880896],
+			[0.65413725, -0.014880896],
+			[0.6632302, -0.014880896],
+			[0.6725167, -0.014880896],
+			[0.68160975, -0.014880896],
+			[0.6907028, -0.014880896],
+			[0.6999893, -0.014880896],
+			[0.70908225, -0.014880896],
+			[0.71836877, -0.014880896],
+			[0.7274618, -0.014880896],
+			[0.73674834, -0.014880896],
+			[0.74584126, -0.014880896],
+			[0.7551278, -0.014880896],
+			[0.76422083, -0.014880896],
+			[0.77350736, -0.014880896],
+			[0.7826003, -0.014880896],
+			[0.78376114, -0.0073924065],
+			[0.78376114, 0.001632154],
+			[0.78376114, 0.010656714],
+			[0.78178275, 0.01883775],
+			[0.7777399, 0.026923358],
+			[0.77361107, 0.035180986],
+			[0.7695683, 0.043266594],
+			[0.76387477, 0.049648285],
+			[0.7575165, 0.05600649],
+			[0.75073063, 0.06115812],
+			[0.742645, 0.065200925],
+			[0.7343874, 0.06932974],
+			[0.7263018, 0.07337254],
+			[0.7180797, 0.074404776],
+			[0.70884323, 0.074404776],
+			[0.6997992, 0.074404776],
+			[0.69056284, 0.074404776],
+			[0.6815188, 0.074404776],
+			[0.6735734, 0.071394205],
+			[0.66548777, 0.0673514],
+			[0.65723, 0.06322253],
+			[0.6496961, 0.059387326],
+			[0.64314306, 0.052834213],
+			[0.6367265, 0.046417654],
+			[0.6301733, 0.0398646],
+			[0.62375677, 0.03344804],
+			[0.61903393, 0.026651561],
+			[0.6161065, 0.017869353],
+			[0.6132401, 0.009270132],
+			[0.6103127, 4.8792362E-4],
+			[0.6074462, -0.0081112385],
+			[0.6051897, -0.016417027],
+			[0.6051897, -0.025441527],
+			[0.6051897, -0.034658194],
+			[0.6051897, -0.043682694],
+			[0.6076292, -0.051961303],
+			[0.61049557, -0.060560584],
+			[0.6133621, -0.069159865],
+			[0.6162895, -0.077942014],
+			[0.6191559, -0.086541295],
+			[0.62416637, -0.093381405],
+			[0.6305829, -0.099797964],
+			[0.637136, -0.10635102],
+			[0.64355254, -0.11276758],
+			[0.6498326, -0.11904764],
+			[0.6577462, -0.12300444],
+			[0.6660038, -0.12713325],
+			[0.67408943, -0.131176],
+			[0.682096, -0.13392854],
+			[0.69114006, -0.13392854],
+			[0.7001841, -0.13392854],
+			[0.70942056, -0.13392854],
+			[0.7184645, -0.13392854],
+			[0.72681785, -0.13263834],
+			[0.73490345, -0.12859547],
+			[0.7431611, -0.12446666],
+			[0.7512467, -0.12042391],
+			[0.7579584, -0.11508846],
+			[0.764375, -0.1086719],
+			[0.770928, -0.10211885],
+			[0.7773446, -0.09570229]
+		]
+	</script>
+</body>
+</html>

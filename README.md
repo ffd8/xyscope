@@ -30,6 +30,8 @@ This library relies on and is infinitely thankful for [Minim](https://github.com
 Search for and add the following libraries for various examples:  
 [Geomerative](https://github.com/rikrd/geomerative), [OpenCV for Processing](https://github.com/atduskgreg/opencv-processing), [openkinect](https://github.com/shiffman/OpenKinect-for-Processing), [video](https://github.com/processing/processing-video), [syphon](https://github.com/Syphon/Processing)
 
+Add manually, [download latest release](https://github.com/ffd8/xyscope/releases/latest) and expand into `~/Processing/libraries`:
+
 ## Audio Interfaces
 
 *< $5*  

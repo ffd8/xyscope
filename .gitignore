@@ -1,7 +1,6 @@
 distribution
 data
 lib
-web
 test
 .DS_Store
 .project
