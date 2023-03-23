@@ -77,8 +77,8 @@ void draw() {
     } else {
       p.pixels[i]  = color(255); // Black
     }
+    p.updatePixels();
   }
-  p.updatePixels();
 
   // process threshold to single line
   opencv.loadImage(p);
