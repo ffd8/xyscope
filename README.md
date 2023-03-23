@@ -2,7 +2,7 @@
 v 3.0.0  
 cc [teddavis.org](https://teddavis.org) 2017 – 2023
 
-Processing library to render graphics on analog vector displays.   
+Processing library to render vector graphics on vector displays.   
 
 XYscope converts the coordinates of primative shapes (point, line, rect, ellipse, vertex, box, sphere, torus...)to audio waveforms (oscillators with custom wavetables) which are sent to an analog display, revealing their graphics. This process of generating real-time audio from vector drawings is built upon the amazing Minim library. Vector graphics shine on a vector display and now we can view our generative works like never before! Tested on MacOS, Windows, Linux (RPi!).
 
